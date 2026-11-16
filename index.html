@@ -1,0 +1,248 @@
+# 1. kids-music-world 폴더 및 index.html 자동 생성
+mkdir -p ~/kids-music-world && cd ~/kids-music-world
+cat << 'EOF' > index.html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>신나는 노래 주크박스 🎵</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Pretendard:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Pretendard', sans-serif; background-color: #0f172a; color: #f8fafc; -webkit-tap-highlight-color: transparent; user-select: none; }
+    .font-jua { font-family: 'Jua', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .card-zoom:active { transform: scale(0.96); }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  </style>
+</head>
+<body class="min-h-screen pb-10">
+  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-3 py-2.5 shadow-lg">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🎧</span>
+        <h1 class="font-jua text-xl sm:text-2xl text-amber-400 tracking-wide">신나는 노래 상자</h1>
+        <span id="totalCountBadge" class="text-xs bg-indigo-600/80 text-white px-2 py-0.5 rounded-full font-bold">0곡</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button onclick="openAddSongModal()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg font-bold transition">+ 노래 추가</button>
+        <button id="gridToggleBtn" onclick="cycleGridCols()" class="text-xs bg-slate-800 border border-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg font-bold">3열 보기</button>
+      </div>
+    </div>
+    <div id="lastWatchedBanner" class="hidden max-w-6xl mx-auto mt-2 bg-gradient-to-r from-indigo-900/90 to-purple-900/90 border border-indigo-500/40 rounded-xl p-2 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="resumeLastWatched()">
+        <img id="lastWatchedThumb" src="" class="w-12 h-8 object-cover rounded-md flex-shrink-0 border border-white/20" />
+        <div class="min-w-0 flex-1">
+          <div class="text-[11px] text-amber-300 font-bold flex items-center gap-1">
+            <span>⏯️ 보던 곳에서 이어보기</span>
+            <span id="lastWatchedTime" class="bg-black/40 px-1.5 py-0.2 rounded text-white">00:00</span>
+          </div>
+          <p id="lastWatchedTitle" class="text-xs text-white font-bold truncate"></p>
+        </div>
+      </div>
+      <button onclick="resumeLastWatched()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs px-3 py-1.5 rounded-lg flex-shrink-0">바로 재생 ▶</button>
+    </div>
+    <div id="categoryTabs" class="max-w-6xl mx-auto mt-2.5 flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5"></div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-2.5 pt-3">
+    <div id="videoGrid" class="grid grid-cols-3 gap-2 sm:gap-3"></div>
+  </main>
+
+  <div id="playerModal" class="fixed inset-0 z-50 hidden bg-black/95 flex flex-col justify-center items-center p-2 sm:p-4">
+    <div class="w-full max-w-4xl bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl">
+      <div class="flex items-center justify-between px-3 py-2.5 bg-slate-800 border-b border-slate-700 gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="modalBadge" class="text-xs px-2 py-0.5 rounded-full bg-indigo-600 text-white font-bold flex-shrink-0">노래</span>
+          <h2 id="modalTitle" class="text-sm sm:text-base font-bold text-white truncate"></h2>
+        </div>
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button onclick="restartCurrentVideo()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg">처음부터 🔄</button>
+          <button onclick="closePlayerModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-extrabold px-3 py-1.5 rounded-lg">닫기 ✕</button>
+        </div>
+      </div>
+      <div class="relative w-full aspect-video bg-black">
+        <div id="ytPlayerContainer" class="w-full h-full"></div>
+      </div>
+      <div class="px-3 py-2 bg-slate-900 flex items-center justify-between text-xs text-slate-400">
+        <span id="resumeStatusText">💡 중간에 닫아도 다음에 보던 위치부터 바로 이어서 재생됩니다.</span>
+        <button onclick="toggleFavoriteCurrent()" id="modalFavBtn" class="text-sm font-bold text-slate-300 hover:text-amber-400">⭐ 즐겨찾기</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="addSongModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-4 space-y-3">
+      <div class="flex justify-between items-center">
+        <h3 class="font-jua text-lg text-amber-400">🎵 새 노래 유튜브 영상 추가</h3>
+        <button onclick="closeAddSongModal()" class="text-slate-400 hover:text-white font-bold">✕</button>
+      </div>
+      <div class="space-y-2 text-xs">
+        <label class="block text-slate-300 font-bold">카테고리 선택</label>
+        <select id="newSongCategory" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
+          <option value="carbot">🤖 헬로카봇</option>
+          <option value="tobot">🚓 또봇</option>
+          <option value="pokemon">⚡ 피카츄·포켓몬</option>
+          <option value="kpop">🎤 가요 (REDRED·TOO BAD)</option>
+          <option value="nursery">🦖 신나는 동요</option>
+        </select>
+        <label class="block text-slate-300 font-bold mt-2">노래 제목</label>
+        <input id="newSongTitle" type="text" placeholder="예: 헬로카봇 시즌15 오프닝" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+        <label class="block text-slate-300 font-bold mt-2">유튜브 주소(URL) 또는 영상 ID</label>
+        <input id="newSongUrl" type="text" placeholder="https://youtu.be/... 또는 11자리 영상 ID" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeAddSongModal()" class="px-3 py-1.5 rounded-lg bg-slate-700 text-xs font-bold">취소</button>
+        <button onclick="saveNewSong()" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold">추가하기</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    const CATEGORIES = [
+      { id: 'all', name: '전체 노래', icon: '🎵' },
+      { id: 'kpop', name: '가요 (REDRED·TOO BAD)', icon: '🎤' },
+      { id: 'carbot', name: '헬로카봇', icon: '🤖' },
+      { id: 'tobot', name: '또봇', icon: '🚓' },
+      { id: 'pokemon', name: '피카츄·포켓몬', icon: '⚡' },
+      { id: 'nursery', name: '공룡·인기동요', icon: '🦖' },
+      { id: 'resume', name: '이어보기', icon: '⏱️' },
+      { id: 'fav', name: '즐겨찾기', icon: '⭐' }
+    ];
+    const DEFAULT_VIDEOS = [
+      { id: 'oeb1U67_9d8', title: 'G-DRAGON - TOO BAD (feat. Anderson .Paak) 공식 MV', category: 'kpop', badge: '🎤 TOO BAD' },
+      { id: '60ItHLz5WEA', title: 'CORTIS - REDRED (Official Performance)', category: 'kpop', badge: '🔥 REDRED' },
+      { id: 'U9BwWKXjVaI', title: 'G-DRAGON - POWER (Official Video)', category: 'kpop', badge: '🎤 GD' },
+      { id: 'k3_tw44QsZQ', title: '헬로카봇 오프닝 주제가 모음 (비밀의 친구 헬로카봇)', category: 'carbot', badge: '🤖 헬로카봇' },
+      { id: 'v6_P2dG4pQo', title: '헬로카봇 시즌 오프닝 & 변신 테마곡 하이라이트', category: 'carbot', badge: '🤖 카봇변신' },
+      { id: 'J2X5mJ3HDYE', title: '헬로카봇 극장판 주제가 신나는 액션송', category: 'carbot', badge: '🤖 극장판' },
+      { id: '3JZ_D3ELwOQ', title: '또봇 대도시의 영웅들 오프닝 주제가 (Tobot Heroes)', category: 'tobot', badge: '🚓 또봇' },
+      { id: 'L_jWHffIx5E', title: '변신자동차 또봇 오리지널 오프닝 & 출동 테마송', category: 'tobot', badge: '🚓 출동송' },
+      { id: 'fJ9rUzIMcZQ', title: '또봇 합체 테마곡 & 액션 하이라이트 뮤직비디오', category: 'tobot', badge: '🚓 합체송' },
+      { id: 'rg6CiPI6h2g', title: '포켓몬스터 공식 오프닝 주제가 (피카츄 라이츄 파이리 꼬부기)', category: 'pokemon', badge: '⚡ 피카츄' },
+      { id: 'JuYeHPFR3f0', title: '포켓몬스터 신나는 피카츄 댄스 & 배틀 테마곡', category: 'pokemon', badge: '⚡ 포켓몬' },
+      { id: '1roy4o4tqQM', title: '명탐정 피카츄 & 포켓몬 신나는 주제가 메들리', category: 'pokemon', badge: '⚡ 피카츄송' },
+      { id: 'XqZsoesa55w', title: '티라노사우루스 렉스 공룡 동요 & 공룡 메들리', category: 'nursery', badge: '🦖 공룡동요' },
+      { id: '75p-N9YKqNo', title: '고고다이노 공룡 탐험대 엉덩이를 씰룩씰룩 & 주제가', category: 'nursery', badge: '🦕 고고다이노' },
+      { id: 'e_04ZrNroTo', title: '신나는 어린이 율동 동요 인기곡 모음', category: 'nursery', badge: '🎶 인기동요' }
+    ];
+    const STORAGE_PROGRESS_KEY = 'kids_music_watch_progress_v1';
+    const STORAGE_FAV_KEY = 'kids_music_favorites_v1';
+    const STORAGE_CUSTOM_KEY = 'kids_music_custom_videos_v1';
+    const STORAGE_LAST_KEY = 'kids_music_last_watched_v1';
+    let currentCategory = 'all', gridCols = 3, ytPlayer = null, currentVideo = null, progressTimer = null;
+    let watchProgress = JSON.parse(localStorage.getItem(STORAGE_PROGRESS_KEY) || '{}');
+    let favorites = JSON.parse(localStorage.getItem(STORAGE_FAV_KEY) || '[]');
+    let customVideos = JSON.parse(localStorage.getItem(STORAGE_CUSTOM_KEY) || '[]');
+
+    function getAllVideos() { return [...customVideos, ...DEFAULT_VIDEOS]; }
+    function formatTime(sec) {
+      sec = Math.max(0, Math.floor(sec || 0));
+      return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+    }
+    function renderTabs() {
+      const allVideos = getAllVideos();
+      document.getElementById('categoryTabs').innerHTML = CATEGORIES.map(cat => {
+        let count = cat.id === 'all' ? allVideos.length : cat.id === 'resume' ? Object.keys(watchProgress).filter(id => watchProgress[id]?.time > 5).length : cat.id === 'fav' ? favorites.length : allVideos.filter(v => v.category === cat.id).length;
+        const active = currentCategory === cat.id;
+        return `<button onclick="selectCategory('${cat.id}')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${active ? 'bg-amber-400 text-slate-950 shadow-md scale-[1.02]' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}"><span>${cat.icon}</span><span>${cat.name}</span><span class="text-[11px] px-1.5 py-0.2 rounded-full ${active ? 'bg-slate-900/20 text-slate-950' : 'bg-slate-700 text-slate-300'}">${count}</span></button>`;
+      }).join('');
+      document.getElementById('totalCountBadge').textContent = `총 ${allVideos.length}곡`;
+    }
+    function selectCategory(catId) { currentCategory = catId; renderTabs(); renderGrid(); }
+    function renderGrid() {
+      const grid = document.getElementById('videoGrid'), allVideos = getAllVideos();
+      let list = currentCategory === 'resume' ? allVideos.filter(v => (watchProgress[v.id]?.time || 0) > 5) : currentCategory === 'fav' ? allVideos.filter(v => favorites.includes(v.id)) : currentCategory !== 'all' ? allVideos.filter(v => v.category === currentCategory) : allVideos;
+      if (!list.length) { grid.innerHTML = `<div class="col-span-full py-16 text-center text-slate-400 text-sm">등록된 영상이 없습니다. 상단 [+ 노래 추가] 버튼으로 추가해 보세요!</div>`; return; }
+      grid.innerHTML = list.map(video => {
+        const prog = watchProgress[video.id], savedSec = prog ? Math.floor(prog.time || 0) : 0, duration = prog?.duration || 180, percent = savedSec > 5 ? Math.min(95, Math.round((savedSec / duration) * 100)) : 0, isFav = favorites.includes(video.id);
+        return `<div onclick="openPlayer('${video.id}')" class="card-zoom cursor-pointer group bg-slate-800/90 rounded-xl overflow-hidden border border-slate-700/80 hover:border-amber-400 transition shadow-md flex flex-col"><div class="relative aspect-video bg-slate-950 overflow-hidden"><img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" /><span class="absolute top-1.5 left-1.5 bg-black/75 backdrop-blur px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold text-amber-300">${video.badge || '🎵 노래'}</span>${isFav ? `<span class="absolute top-1.5 right-1.5 text-xs bg-black/70 px-1.5 py-0.5 rounded">⭐</span>` : ''}${savedSec > 5 ? `<span class="absolute bottom-2 right-1.5 bg-indigo-600/95 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow">⏱️ ${formatTime(savedSec)} 이어보기</span><div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-700"><div class="h-full bg-amber-400" style="width:${percent}%"></div></div>` : ''}</div><div class="p-2 flex-1 flex flex-col justify-between"><h3 class="text-xs sm:text-sm font-bold text-slate-100 line-clamp-2 leading-snug">${video.title}</h3></div></div>`;
+      }).join('');
+    }
+    function cycleGridCols() {
+      const grid = document.getElementById('videoGrid'), btn = document.getElementById('gridToggleBtn');
+      grid.classList.remove('grid-cols-2', 'grid-cols-3', 'grid-cols-4');
+      gridCols = gridCols === 3 ? 4 : gridCols === 4 ? 2 : 3;
+      grid.classList.add(`grid-cols-${gridCols}`);
+      btn.textContent = `${gridCols}열 보기`;
+    }
+    function openPlayer(videoId, forceStartZero = false) {
+      currentVideo = getAllVideos().find(v => v.id === videoId) || { id: videoId, title: '신나는 노래', badge: '🎵 노래' };
+      document.getElementById('modalTitle').textContent = currentVideo.title;
+      document.getElementById('modalBadge').textContent = currentVideo.badge || '🎵 노래';
+      document.getElementById('playerModal').classList.remove('hidden');
+      updateFavBtnUI();
+      const savedSec = forceStartZero ? 0 : Math.floor(watchProgress[videoId]?.time || 0);
+      document.getElementById('resumeStatusText').textContent = savedSec > 5 ? `⏱️ 이전에 보던 ${formatTime(savedSec)}부터 이어서 재생합니다.` : `💡 중간에 닫아도 다음에 보던 위치부터 바로 이어서 재생됩니다.`;
+      if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') ytPlayer.loadVideoById({ videoId, startSeconds: savedSec });
+      else if (window.YT && window.YT.Player) ytPlayer = new YT.Player('ytPlayerContainer', { videoId, playerVars: { autoplay: 1, rel: 0, playsinline: 1, start: savedSec }, events: { onStateChange: onPlayerStateChange } });
+    }
+    function onPlayerStateChange(e) {
+      if (e.data === YT.PlayerState.PLAYING) { clearInterval(progressTimer); progressTimer = setInterval(saveCurrentTimestamp, 2000); }
+      else { saveCurrentTimestamp(); clearInterval(progressTimer); if (e.data === YT.PlayerState.ENDED && currentVideo) { delete watchProgress[currentVideo.id]; localStorage.setItem(STORAGE_PROGRESS_KEY, JSON.stringify(watchProgress)); renderTabs(); renderGrid(); } }
+    }
+    function saveCurrentTimestamp() {
+      if (!ytPlayer || !currentVideo || typeof ytPlayer.getCurrentTime !== 'function') return;
+      const cur = ytPlayer.getCurrentTime(), dur = ytPlayer.getDuration() || 180;
+      if (cur > 3) {
+        watchProgress[currentVideo.id] = { time: cur, duration: dur, updatedAt: Date.now() };
+        localStorage.setItem(STORAGE_PROGRESS_KEY, JSON.stringify(watchProgress));
+        localStorage.setItem(STORAGE_LAST_KEY, JSON.stringify({ id: currentVideo.id, title: currentVideo.title, time: cur }));
+        updateLastWatchedBanner();
+      }
+    }
+    function restartCurrentVideo() { if (!currentVideo) return; delete watchProgress[currentVideo.id]; localStorage.setItem(STORAGE_PROGRESS_KEY, JSON.stringify(watchProgress)); openPlayer(currentVideo.id, true); }
+    function closePlayerModal() { saveCurrentTimestamp(); clearInterval(progressTimer); if (ytPlayer?.pauseVideo) ytPlayer.pauseVideo(); document.getElementById('playerModal').classList.add('hidden'); renderTabs(); renderGrid(); }
+    function updateLastWatchedBanner() {
+      const last = JSON.parse(localStorage.getItem(STORAGE_LAST_KEY) || 'null'), banner = document.getElementById('lastWatchedBanner');
+      if (!last?.id) { banner.classList.add('hidden'); return; }
+      banner.classList.remove('hidden');
+      document.getElementById('lastWatchedThumb').src = `https://img.youtube.com/vi/${last.id}/hqdefault.jpg`;
+      document.getElementById('lastWatchedTitle').textContent = last.title;
+      document.getElementById('lastWatchedTime').textContent = formatTime(last.time);
+    }
+    function resumeLastWatched() { const last = JSON.parse(localStorage.getItem(STORAGE_LAST_KEY) || 'null'); if (last?.id) openPlayer(last.id); }
+    function toggleFavoriteCurrent() {
+      if (!currentVideo) return;
+      const idx = favorites.indexOf(currentVideo.id);
+      if (idx >= 0) favorites.splice(idx, 1); else favorites.push(currentVideo.id);
+      localStorage.setItem(STORAGE_FAV_KEY, JSON.stringify(favorites)); updateFavBtnUI(); renderTabs(); renderGrid();
+    }
+    function updateFavBtnUI() {
+      const btn = document.getElementById('modalFavBtn'), isFav = currentVideo && favorites.includes(currentVideo.id);
+      btn.textContent = isFav ? '⭐ 즐겨찾기 완료' : '☆ 즐겨찾기 추가';
+      btn.className = isFav ? 'text-sm font-bold text-amber-400' : 'text-sm font-bold text-slate-300';
+    }
+    function openAddSongModal() { document.getElementById('addSongModal').classList.remove('hidden'); }
+    function closeAddSongModal() { document.getElementById('addSongModal').classList.add('hidden'); }
+    function extractYoutubeId(input) {
+      input = input.trim();
+      if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
+      const m = input.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/);
+      return m ? m[1] : null;
+    }
+    function saveNewSong() {
+      const cat = document.getElementById('newSongCategory').value, title = document.getElementById('newSongTitle').value.trim() || '신나는 노래', vid = extractYoutubeId(document.getElementById('newSongUrl').value);
+      if (!vid) return alert('올바른 유튜브 주소나 영상 ID를 입력해 주세요.');
+      const badgeMap = { carbot: '🤖 헬로카봇', tobot: '🚓 또봇', pokemon: '⚡ 피카츄', kpop: '🎤 가요', nursery: '🦖 동요' };
+      customVideos.unshift({ id: vid, title, category: cat, badge: badgeMap[cat] || '🎵 노래' });
+      localStorage.setItem(STORAGE_CUSTOM_KEY, JSON.stringify(customVideos));
+      document.getElementById('newSongTitle').value = ''; document.getElementById('newSongUrl').value = '';
+      closeAddSongModal(); renderTabs(); renderGrid();
+    }
+    renderTabs(); renderGrid(); updateLastWatchedBanner();
+  </script>
+</body>
+</html>
+EOF
+
+# 2. Git 초기화 및 GitHub 원격 레포지토리 자동 생성 + 푸시 + GitHub Pages 자동 활성화
+git init
+git branch -M main
+git add index.html
+git commit -m "feat: 신나는 노래 주크박스 3열 단편재생 및 이어보기 웹앱"
+gh repo create jinsunkim-miin29na/kids-music-world --public --source=. --remote=origin --push
+gh api repos/jinsunkim-miin29na/kids-music-world/pages -X POST -f source[branch]=main -f source[path]=/
