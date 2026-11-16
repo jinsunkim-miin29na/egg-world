@@ -3,21 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>에그박사 자연탐사 도감 🪲</title>
+  <title>🥚 에그박사 유튜브 재생목록 도감</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Jua & Pretendard -->
   <link href="https://fonts.googleapis.com/css2?family=Jua&family=Pretendard:wght@500;700;800&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
+    :root {
+      --font-title: 'Jua', sans-serif;
+      --font-body: 'Pretendard', sans-serif;
+    }
     body {
-      font-family: 'Pretendard', sans-serif;
-      background-color: #0b1f17;
+      font-family: var(--font-body);
+      background: radial-gradient(circle at top, #132a13 0%, #0b190e 65%, #071009 100%);
       color: #f0fdf4;
+      min-height: 100vh;
+      overflow-x: hidden;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
-    .font-jua { font-family: 'Jua', sans-serif; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .card-zoom:active { transform: scale(0.96); }
+    .font-jua {
+      font-family: var(--font-title);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* YouTube Playlist Folder Stacked Top Effect */
+    .playlist-stack {
+      position: relative;
+      margin-top: 10px;
+    }
+    .playlist-stack::before {
+      content: '';
+      position: absolute;
+      top: -9px;
+      left: 8%;
+      right: 8%;
+      height: 8px;
+      background: rgba(74, 222, 128, 0.25);
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      z-index: 1;
+    }
+    .playlist-stack::after {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: 4%;
+      right: 4%;
+      height: 6px;
+      background: rgba(163, 230, 53, 0.5);
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      z-index: 2;
+    }
+    .card-interactive {
+      transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+    .card-interactive:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 22px -6px rgba(163, 230, 53, 0.28);
+    }
+    .card-interactive:active {
+      transform: scale(0.96);
+    }
+    .tab-pill.active {
+      background: linear-gradient(135deg, #a3e635 0%, #eab308 100%);
+      color: #062112;
+      border-color: #ecfccb;
+      box-shadow: 0 4px 12px rgba(163, 230, 53, 0.35);
+    }
     .line-clamp-2 {
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -26,529 +87,1149 @@
     }
   </style>
 </head>
-<body class="min-h-screen pb-12">
+<body class="pb-14">
 
   <!-- 상단 고정 헤더 -->
-  <header class="sticky top-0 z-30 bg-[#0d281d]/95 backdrop-blur border-b border-emerald-800/70 px-3 py-2 shadow-lg">
-    <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2 min-w-0">
-        <span class="text-2xl">🥚</span>
-        <h1 class="font-jua text-lg sm:text-2xl text-lime-400 tracking-wide truncate">에그박사 생물도감</h1>
-        <span id="syncBadge" class="text-[11px] bg-emerald-800 text-lime-300 px-2 py-0.5 rounded-full font-bold whitespace-nowrap">
-          채널 1.8천+ 연동
-        </span>
-      </div>
-
-      <div class="flex items-center gap-1.5 flex-shrink-0">
-        <button onclick="openAddVideoModal()" class="text-xs bg-lime-500 hover:bg-lime-400 text-emerald-950 px-2.5 py-1.5 rounded-lg font-extrabold transition">
-          + 영상 추가
-        </button>
-        <button id="gridToggleBtn" onclick="cycleGridCols()" class="text-xs bg-emerald-900 border border-emerald-700 text-emerald-100 px-2.5 py-1.5 rounded-lg font-bold">
-          3열
-        </button>
-      </div>
-    </div>
-
-    <!-- 보던 영상 바로 이어보기 배너 -->
-    <div id="lastWatchedBanner" class="hidden max-w-6xl mx-auto mt-2 bg-gradient-to-r from-emerald-900/95 to-teal-900/95 border border-lime-400/40 rounded-xl p-2 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="resumeLastWatched()">
-        <img id="lastWatchedThumb" src="" class="w-12 h-8 object-cover rounded-md flex-shrink-0 border border-lime-300/30" />
-        <div class="min-w-0 flex-1">
-          <div class="text-[11px] text-lime-300 font-bold flex items-center gap-1">
-            <span>⏯️ 보던 위치에서 바로 이어보기</span>
-            <span id="lastWatchedTime" class="bg-black/40 px-1.5 py-0.2 rounded text-white">00:00</span>
+  <header class="sticky top-0 z-30 bg-[#0d2214]/95 backdrop-blur-md border-b border-emerald-800/80 shadow-lg">
+    <div class="max-w-7xl mx-auto px-2.5 sm:px-5 py-2">
+      
+      <!-- 1단: 로고 + 검색 + 컨트롤 버튼 -->
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <!-- 로고 클릭 시 '전체 재생목록' 뷰로 이동 -->
+        <div class="flex items-center gap-2 cursor-pointer" onclick="openPlaylistsOverview()">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-lime-300 via-yellow-400 to-amber-500 flex items-center justify-center shadow border border-lime-100 shrink-0">
+            <span class="text-lg sm:text-xl">🥚</span>
           </div>
-          <p id="lastWatchedTitle" class="text-xs text-white font-bold truncate"></p>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h1 class="font-jua text-base sm:text-2xl tracking-wide text-lime-300 leading-none">
+                에그박사 자연탐사 월드
+              </h1>
+              <span id="headerCountBadge" class="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-lime-400 text-emerald-950">
+                재생목록 7개
+              </span>
+            </div>
+            <p class="text-[11px] text-emerald-200/75 hidden sm:block">
+              @eggbugs 유튜브 공식 재생목록 폴더 · 호주생물탐사(19) · 생물극장(12) · 기타곤충(15)
+            </p>
+          </div>
+        </div>
+
+        <!-- 검색창 + 열 전환 + 영상 추가 버튼 -->
+        <div class="flex items-center gap-1.5 flex-1 sm:flex-initial justify-end min-w-[210px]">
+          <div class="relative flex-1 sm:w-52 max-w-xs">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-300/70 text-xs"></i>
+            <input
+              id="searchInput"
+              type="text"
+              oninput="handleSearch(this.value)"
+              placeholder="호주, 생물극장, 사마귀..."
+              class="w-full pl-7 pr-6 py-1.5 rounded-xl bg-emerald-950/90 border border-emerald-700/70 text-xs sm:text-sm text-white placeholder-emerald-300/50 focus:outline-none focus:border-lime-400"
+            />
+            <button
+              id="clearSearchBtn"
+              onclick="clearSearch()"
+              class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-emerald-300 hover:text-white text-xs"
+            >
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+
+          <!-- 3열 / 4열 / 2열 토글 -->
+          <button
+            onclick="cycleGridColumns()"
+            class="px-2.5 py-1.5 rounded-xl bg-emerald-900/90 hover:bg-emerald-800 text-lime-300 font-bold text-xs border border-emerald-700 flex items-center gap-1 shrink-0 active:scale-95 transition"
+            title="한 줄에 보일 카드 개수 변경"
+          >
+            <i class="fa-solid fa-table-cells"></i>
+            <span id="gridToggleLabel">3열</span>
+          </button>
+
+          <!-- + 영상 추가 버튼 -->
+          <button
+            onclick="openAddModal()"
+            class="px-2.5 py-1.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-emerald-950 font-extrabold text-xs flex items-center gap-1 shrink-0 shadow active:scale-95 transition"
+          >
+            <i class="fa-solid fa-plus"></i>
+            <span>영상 추가</span>
+          </button>
         </div>
       </div>
-      <button onclick="resumeLastWatched()" class="bg-lime-400 hover:bg-lime-300 text-emerald-950 font-extrabold text-xs px-3 py-1.5 rounded-lg flex-shrink-0">
-        이어보기 ▶
-      </button>
-    </div>
 
-    <!-- 재생목록별 탭 (최신순 정렬) -->
-    <div id="playlistTabs" class="max-w-6xl mx-auto mt-2 flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5"></div>
+      <!-- 2단: 상단 탭 바 (전체 재생목록 / 각 재생목록 / ⏱️ 이어보기 / ⭐ 찜한 영상) -->
+      <div class="mt-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="topNavTabs"></div>
+
+      <!-- 3단: ⏯️ 최근 보던 영상 바로 이어보기 미니 배너 -->
+      <div id="resumeWatchingBanner" class="hidden mt-2 rounded-xl bg-gradient-to-r from-emerald-900/95 via-teal-900/95 to-emerald-950 border border-lime-400/50 px-3 py-1.5 shadow-md">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span class="w-2 h-2 rounded-full bg-lime-400 animate-ping"></span>
+            <span class="font-jua text-xs text-lime-300">⏯️ 최근 보던 영상 이어보기</span>
+          </div>
+          <div id="resumeWatchingList" class="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1 py-0.5"></div>
+          <button
+            onclick="clearAllWatchProgress()"
+            class="text-[11px] text-emerald-300/75 hover:text-red-300 font-bold shrink-0"
+          >
+            비우기
+          </button>
+        </div>
+      </div>
+    </div>
   </header>
 
-  <!-- 메인 3열 그리드 (한 화면에 9~12개 노출) -->
-  <main class="max-w-6xl mx-auto px-2.5 pt-2.5">
-    <div id="videoGrid" class="grid grid-cols-3 gap-2 sm:gap-3"></div>
+  <!-- 메인 콘텐츠 -->
+  <main class="max-w-7xl mx-auto px-2.5 sm:px-5 pt-2.5">
 
-    <!-- 채널 재생목록 영상 더 불러오기 버튼 -->
-    <div class="mt-5 text-center">
-      <button id="loadMoreBtn" onclick="loadMoreFromChannel()" class="bg-emerald-800/90 hover:bg-emerald-700 text-lime-300 border border-emerald-600 font-extrabold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-md transition">
-        + 이 재생목록의 다음 에그박사 영상 더 불러오기
-      </button>
-    </div>
+    <!-- 특정 재생목록 상세 진입 시 상단 뒤로가기 & 정렬 바 -->
+    <section id="playlistHeaderBar" class="hidden mb-2.5 rounded-2xl bg-emerald-950/90 border border-emerald-700/80 px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <button
+          onclick="openPlaylistsOverview()"
+          class="px-3 py-1.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-emerald-950 font-extrabold text-xs flex items-center gap-1 shrink-0 shadow active:scale-95 transition"
+        >
+          <span>← 전체 재생목록</span>
+        </button>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h2 id="activePlaylistTitle" class="font-jua text-sm sm:text-lg text-lime-300 truncate">
+              🦘 호주 생물탐사
+            </h2>
+            <span id="activePlaylistCount" class="px-2 py-0.5 rounded-full bg-emerald-800 text-lime-300 font-extrabold text-[11px] shrink-0">
+              동영상 19개
+            </span>
+          </div>
+          <p id="activePlaylistDesc" class="text-[11px] text-emerald-200/75 truncate"></p>
+        </div>
+      </div>
+
+      <!-- 최신순(19화→1화) / 1화부터 순서대로(1화→19화) 정렬 전환 버튼 -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button
+          id="sortToggleBtn"
+          onclick="toggleEpisodeSortOrder()"
+          class="px-3 py-1.5 rounded-xl bg-emerald-900 hover:bg-emerald-800 text-emerald-100 border border-emerald-600 text-xs font-extrabold flex items-center gap-1.5 active:scale-95 transition"
+        >
+          <i class="fa-solid fa-arrow-down-wide-short text-lime-300"></i>
+          <span id="sortToggleLabel">최신순 (마지막화→1화)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- VIEW 1: '📂 전체 재생목록' 뷰 (유튜브 재생목록 겹쳐진 폴더 카드 3열 그리드) -->
+    <section id="playlistsFolderSection">
+      <div class="flex items-center justify-between mb-1.5 px-1">
+        <div class="flex items-center gap-1.5">
+          <span class="text-sm">📂</span>
+          <h2 class="font-jua text-sm sm:text-base text-lime-200">
+            에그박사 공식 유튜브 재생목록 (최신순)
+          </h2>
+        </div>
+        <span class="text-[11px] text-emerald-300/80">
+          폴더를 터치하면 재생목록 안의 에피소드들이 3열로 펼쳐집니다
+        </span>
+      </div>
+      <div id="playlistsGrid" class="grid grid-cols-3 gap-2.5 sm:gap-4">
+        <!-- JS로 렌더링 -->
+      </div>
+    </section>
+
+    <!-- VIEW 2: 선택한 재생목록 내부 에피소드 3열 그리드 (한 화면 9~12개 노출) -->
+    <section id="videosGridSection" class="hidden">
+      <div id="videoGrid" class="grid grid-cols-3 gap-2 sm:gap-3">
+        <!-- JS로 렌더링 -->
+      </div>
+    </section>
+
   </main>
 
-  <!-- 단편 재생 모달 (초 단위 이어보기 지원) -->
-  <div id="playerModal" class="fixed inset-0 z-50 hidden bg-black/95 flex flex-col justify-center items-center p-2 sm:p-4">
-    <div class="w-full max-w-4xl bg-[#0f291e] rounded-2xl overflow-hidden border border-emerald-700 shadow-2xl">
-      <div class="flex items-center justify-between px-3 py-2 bg-[#133527] border-b border-emerald-800 gap-2">
+  <!-- 단편 재생 모달 (YouTube IFrame Player API 연동 & 초 단위 이어보기) -->
+  <div
+    id="playerModal"
+    class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4"
+    onclick="if(event.target === this) closePlayerModal()"
+  >
+    <div class="w-full max-w-4xl rounded-3xl bg-[#0e2315] border-2 border-lime-400/80 shadow-2xl overflow-hidden">
+      
+      <!-- 모달 상단 헤더 ('처음부터 🔄' 버튼과 '닫기 ✕' 버튼) -->
+      <div class="flex items-center justify-between px-3.5 py-2.5 bg-[#09180e] border-b border-emerald-800/80 gap-2">
         <div class="flex items-center gap-2 min-w-0">
-          <span id="modalBadge" class="text-xs px-2 py-0.5 rounded-full bg-lime-400 text-emerald-950 font-extrabold flex-shrink-0">에그박사</span>
-          <h2 id="modalTitle" class="text-sm sm:text-base font-bold text-white truncate"></h2>
+          <span id="modalBadge" class="px-2 py-0.5 rounded-lg bg-lime-400 text-emerald-950 font-extrabold text-xs shrink-0">
+            🦘 호주 생물탐사
+          </span>
+          <h3 id="modalTitle" class="font-jua text-sm sm:text-lg text-white truncate">
+            영상 제목
+          </h3>
         </div>
-        <div class="flex items-center gap-1.5 flex-shrink-0">
-          <button onclick="restartCurrentVideo()" class="bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg">
-            처음부터 🔄
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button
+            onclick="restartCurrentVideo()"
+            class="px-2.5 py-1.5 rounded-xl bg-emerald-900 hover:bg-emerald-800 text-lime-200 font-extrabold text-xs border border-emerald-700 flex items-center gap-1 active:scale-95 transition"
+          >
+            <span>처음부터 🔄</span>
           </button>
-          <button onclick="closePlayerModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-extrabold px-3 py-1.5 rounded-lg">
-            닫기 ✕
+
+          <button
+            onclick="toggleFavoriteFromModal()"
+            class="px-2.5 py-1.5 rounded-xl bg-emerald-900/90 hover:bg-emerald-800 text-lime-300 font-bold text-xs border border-emerald-700 flex items-center gap-1 active:scale-95 transition"
+          >
+            <i class="fa-regular fa-star" id="modalFavIcon"></i>
+            <span id="modalFavText" class="hidden sm:inline">찜하기</span>
+          </button>
+
+          <button
+            onclick="closePlayerModal()"
+            class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs sm:text-sm flex items-center gap-1 shadow active:scale-95 transition"
+          >
+            <span>닫기 ✕</span>
           </button>
         </div>
+      </div>
+
+      <!-- 이어보기 알림 줄 -->
+      <div id="modalResumeNotice" class="hidden px-3.5 py-1.5 bg-lime-500/20 border-b border-lime-400/30 flex items-center justify-between text-xs">
+        <span id="modalResumeNoticeText" class="text-lime-200 font-bold">
+          ⏱️ 이전에 보던 위치(00:00)부터 바로 이어서 재생합니다!
+        </span>
+        <button onclick="restartCurrentVideo()" class="text-lime-300 underline font-extrabold ml-2">
+          00:00부터 다시 보기
+        </button>
       </div>
 
       <!-- 16:9 유튜브 단편 플레이어 -->
-      <div class="relative w-full aspect-video bg-black">
-        <div id="ytPlayerContainer" class="w-full h-full"></div>
+      <div class="relative w-full pt-[56.25%] bg-black">
+        <div id="ytPlayerContainer" class="absolute inset-0 w-full h-full"></div>
       </div>
 
-      <div class="px-3 py-2 bg-[#0b1f17] flex items-center justify-between text-xs text-emerald-300">
-        <span id="resumeStatusText">💡 보다가 닫아도 다음에 멈춘 위치부터 바로 이어서 재생됩니다.</span>
-        <button onclick="toggleFavoriteCurrent()" id="modalFavBtn" class="text-sm font-bold text-emerald-200 hover:text-lime-400">
-          ⭐ 찜하기
+      <!-- 모달 하단 안내 -->
+      <div class="px-3.5 py-2 bg-[#0b1c10] flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-1.5 text-emerald-200/90">
+          <i class="fa-solid fa-floppy-disk text-lime-400"></i>
+          <span id="modalSaveStatusText">중간에 닫아도 시청 위치(초 단위)가 자동 저장되어 다음번에 이어볼 수 있어요.</span>
+        </div>
+        <span class="text-lime-300/80 font-bold">단편 재생 전용</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- '+ 영상 추가' 모달 -->
+  <div
+    id="addModal"
+    class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
+    onclick="if(event.target === this) closeAddModal()"
+  >
+    <div class="w-full max-w-md rounded-3xl bg-[#102616] border-2 border-lime-500/70 shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3.5 bg-[#0a190e] border-b border-emerald-800">
+        <h3 class="font-jua text-lg text-lime-300 flex items-center gap-2">
+          <i class="fa-solid fa-folder-plus"></i>
+          <span>재생목록에 새 유튜브 영상 추가</span>
+        </h3>
+        <button onclick="closeAddModal()" class="text-emerald-300 hover:text-white text-xl px-2">
+          ✕
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3 text-xs sm:text-sm">
+        <div>
+          <label class="block text-xs text-lime-300 font-bold mb-1">추가할 재생목록 선택</label>
+          <select
+            id="addTargetPlaylist"
+            class="w-full px-3 py-2 rounded-xl bg-[#09160d] border border-emerald-700 text-white text-sm focus:outline-none focus:border-lime-400"
+          >
+            <option value="australia">🦘 호주 생물탐사</option>
+            <option value="theater">🎭 생물극장</option>
+            <option value="other_insects">🦗 기타곤충</option>
+            <option value="beetles">🪲 사슴벌레·장수풍뎅이</option>
+            <option value="nature_explore">🌿 자연탐사·야외채집</option>
+            <option value="reptiles_amphibians">🦎 파충류·양서류</option>
+            <option value="aquatic_marine">🦀 수생·바다생물</option>
+            <option value="NEW_PLAYLIST">✨ 새 재생목록 폴더 만들기</option>
+          </select>
+        </div>
+
+        <div id="newPlaylistNameBox" class="hidden">
+          <label class="block text-xs text-lime-300 font-bold mb-1">새 재생목록 이름</label>
+          <input
+            id="newPlaylistTitleInput"
+            type="text"
+            placeholder="예: 🏝️ 제주도 생물탐사"
+            class="w-full px-3 py-2 rounded-xl bg-[#09160d] border border-emerald-700 text-white text-sm focus:outline-none focus:border-lime-400"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs text-lime-300 font-bold mb-1">유튜브 영상 URL 또는 11자리 영상 ID</label>
+          <input
+            id="addUrlInput"
+            type="text"
+            placeholder="https://youtu.be/... 또는 영상 ID"
+            class="w-full px-3 py-2 rounded-xl bg-[#09160d] border border-emerald-700 text-white text-sm focus:outline-none focus:border-lime-400"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs text-lime-300 font-bold mb-1">영상 제목 (비워두면 유튜브에서 자동 추출)</label>
+          <input
+            id="addTitleInput"
+            type="text"
+            placeholder="예: 호주 생물탐사 특별편"
+            class="w-full px-3 py-2 rounded-xl bg-[#09160d] border border-emerald-700 text-white text-sm focus:outline-none focus:border-lime-400"
+          />
+        </div>
+
+        <button
+          onclick="handleAddSubmit()"
+          class="w-full py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-emerald-950 font-extrabold text-sm shadow transition"
+        >
+          + 재생목록에 추가하기
         </button>
       </div>
     </div>
   </div>
 
-  <!-- 영상 직접 추가 모달 -->
-  <div id="addVideoModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
-    <div class="bg-[#123124] border border-emerald-700 rounded-2xl max-w-md w-full p-4 space-y-3">
-      <div class="flex justify-between items-center">
-        <h3 class="font-jua text-lg text-lime-400">🪲 에그박사 영상 추가</h3>
-        <button onclick="closeAddVideoModal()" class="text-emerald-300 hover:text-white font-bold">✕</button>
-      </div>
-      <div class="space-y-2 text-xs">
-        <label class="block text-emerald-200 font-bold">재생목록 분류</label>
-        <select id="newVideoCategory" class="w-full bg-[#0b1f17] border border-emerald-700 rounded-lg p-2 text-white">
-          <option value="insect">🪲 곤충·절지류 대백과</option>
-          <option value="reptile">🦎 파충류·양서류 연구소</option>
-          <option value="aquatic">🦀 수생·바다생물 탐사</option>
-          <option value="explore">🌿 자연탐사·채집 대모험</option>
-          <option value="lab">🔬 신기한 생물 관찰·실험</option>
-        </select>
-        <label class="block text-emerald-200 font-bold mt-2">영상 제목 (비워두면 자동 입력)</label>
-        <input id="newVideoTitle" type="text" placeholder="예: 장수풍뎅이 vs 사슴벌레 대결" class="w-full bg-[#0b1f17] border border-emerald-700 rounded-lg p-2 text-white" />
-        <label class="block text-emerald-200 font-bold mt-2">유튜브 주소(URL) 또는 영상 ID</label>
-        <input id="newVideoUrl" type="text" placeholder="https://youtu.be/... 또는 11자리 ID" class="w-full bg-[#0b1f17] border border-emerald-700 rounded-lg p-2 text-white" />
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeAddVideoModal()" class="px-3 py-1.5 rounded-lg bg-emerald-900 text-xs font-bold">취소</button>
-        <button onclick="saveNewVideo()" class="px-3 py-1.5 rounded-lg bg-lime-400 text-emerald-950 text-xs font-extrabold">추가하기</button>
-      </div>
-    </div>
+  <!-- 토스트 알림 -->
+  <div
+    id="toastBox"
+    class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 hidden px-4 py-2.5 rounded-2xl bg-lime-400 text-emerald-950 font-extrabold text-xs sm:text-sm shadow-2xl border-2 border-white flex items-center gap-2"
+  >
+    <i class="fa-solid fa-circle-check text-emerald-950"></i>
+    <span id="toastMessage">알림</span>
   </div>
 
-  <!-- 백그라운드에서 에그박사 채널 재생목록 영상 ID들을 추출하기 위한 숨김 컨테이너 -->
-  <div id="hiddenExtractor" class="hidden"></div>
-
+  <!-- YouTube IFrame API -->
   <script src="https://www.youtube.com/iframe_api"></script>
+
   <script>
-    // 에그박사 공식 유튜브 채널 ID (@eggbugs) 및 업로드 재생목록 ID
-    const EGG_CHANNEL_ID = 'UCyhmwp12LECf7lvw7vddVPA';
-    const EGG_UPLOADS_PLAYLIST_ID = 'UUyhmwp12LECf7lvw7vddVPA';
-
-    // 유튜브처럼 최신순 + 재생목록별 탭 구성
-    const PLAYLIST_TABS = [
-      { id: 'latest', name: '🔥 최신 업로드 (1.8천+)', icon: '🆕' },
-      { id: 'explore', name: '자연탐사·채집', icon: '🌿' },
-      { id: 'insect', name: '곤충·절지류', icon: '🪲' },
-      { id: 'reptile', name: '파충류·양서류', icon: '🦎' },
-      { id: 'aquatic', name: '물속·바다생물', icon: '🦀' },
-      { id: 'lab', name: '생물 실험·관찰', icon: '🔬' },
-      { id: 'resume', name: '이어보기', icon: '⏱️' },
-      { id: 'fav', name: '찜한 영상', icon: '⭐' }
+    // =========================================================================
+    // 1. 에그박사(@eggbugs) 유튜브 재생목록 데이터 (요구사항 정확한 개수 반영)
+    //    - 🦘 호주 생물탐사 (19개)
+    //    - 🎭 생물극장 (12개)
+    //    - 🦗 기타곤충 (15개)
+    //    - 🪲 사슴벌레·장수풍뎅이 (14개)
+    //    - 🌿 자연탐사·야외채집 (12개)
+    //    - 🦎 파충류·양서류 (12개)
+    //    - 🦀 수생·바다생물 (12개)
+    // =========================================================================
+    const INITIAL_PLAYLISTS = [
+      {
+        id: 'australia',
+        title: '호주 생물탐사',
+        icon: '🦘',
+        updatedLabel: '최근 업데이트',
+        description: '에그박사팀의 대자연 호주 야생 생물·곤충·파충류 대탐험 시리즈 (전 19편)',
+        videos: [
+          { id: 'E4tGIWepaPk', title: '[호주 생물탐사 19화] 공룡을 닮은 거대 도마뱀과 호주 야생 파충류 총결산!', ep: 19 },
+          { id: '5MiZffk_j0U', title: '[호주 생물탐사 18화] 에메랄드빛 호주 해변과 맹그로브 갯벌 생물 대탐험!', ep: 18 },
+          { id: '3JCR-D15Kow', title: '[호주 생물탐사 17화] 호주 열대우림에서 만난 초대형 사마귀와 나뭇잎벌레!', ep: 17 },
+          { id: 'Th6AQ4XdPDI', title: '[호주 생물탐사 16화] 호주의 밤하늘 아래 야간 등화채집! 희귀 곤충 총출동', ep: 16 },
+          { id: '2Rszvj8OUMo', title: '[호주 생물탐사 15화] 호주 사막과 바위틈의 귀염둥이 게코도마뱀 탐사!', ep: 15 },
+          { id: 'a6VsxFv4Pb8', title: '[호주 생물탐사 14화] 비 온 뒤 호주 국립공원 숲속 양서류·두꺼비 구출 작전', ep: 14 },
+          { id: 'zch92kSkN2Y', title: '[호주 생물탐사 13화] 호주 유칼립투스 숲의 황금빛 장수풍뎅이와 풍뎅이들!', ep: 13 },
+          { id: '7b_nFfdE-1A', title: '[호주 생물탐사 12화] 무지개빛 광택! 호주 고유종 뮤엘러리 사슴벌레를 찾아서', ep: 12 },
+          { id: 'BLyJ3IcOUVA', title: '[호주 생물탐사 11화] 거대 집게발을 가진 호주 블루클라 민물가재 탐사!', ep: 11 },
+          { id: 'lKCr_5ApzCk', title: '[호주 생물탐사 10화] 호주의 거대 청개구리(화이트트리프록) 야간 관찰기', ep: 10 },
+          { id: '4AVDbc_ZKmk', title: '[호주 생물탐사 9화] 호주 야생 꿀벌과 거대 말벌의 놀라운 생태 현장', ep: 9 },
+          { id: 'jABYQF4nnl8', title: '[호주 생물탐사 8화] 목도리를 펼치는 호주 목도리도마뱀과 블루텅 스킨크!', ep: 8 },
+          { id: '5wrHMLKs7jY', title: '[호주 생물탐사 7화] 산호초 바위 해안가 조수웅덩이 신비한 바다생물 찾기', ep: 7 },
+          { id: '6yafcGumVlo', title: '[호주 생물탐사 6화] 호주 계곡과 습지대에 사는 신기한 수생곤충 탐사', ep: 6 },
+          { id: 'dtiMOZvNtuk', title: '[호주 생물탐사 5화] 거대 대왕 여치와 호주 숲속의 위장술 천재 대벌레', ep: 5 },
+          { id: 'ce7nP9rAdLA', title: '[호주 생물탐사 4화] 쓰러진 고목 속 거대 하늘소 애벌레와 딱정벌레 탐사', ep: 4 },
+          { id: 'zKmSrgC0tzE', title: '[호주 생물탐사 3화] 호주 아웃백 붉은 모래땅 속 숨어 사는 생물 찾기!', ep: 3 },
+          { id: 'sEUdQv1Wnxo', title: '[호주 생물탐사 2화] 캥거루, 코알라, 웜뱃 그리고 초원의 딱정벌레 만남', ep: 2 },
+          { id: 'IvMnNYvODAQ', title: '[호주 생물탐사 1화] 드디어 호주 출발! 에그박사 호주 대자연 생물탐사 시작', ep: 1 }
+        ]
+      },
+      {
+        id: 'theater',
+        title: '생물극장',
+        icon: '🎭',
+        updatedLabel: '인기 시리즈',
+        description: '에그박사·양박사·웅박사가 생물로 변신해 펼치는 코믹 생물 상황극 시리즈 (12편)',
+        videos: [
+          { id: '2Rszvj8OUMo', title: '[생물극장 12화] 귀여운 게코도마뱀 인간이 된 닥터웅?! 도마뱀의 놀라운 비밀', ep: 12 },
+          { id: '4AVDbc_ZKmk', title: '[생물극장 11화] 꿀벌 왕국을 침공한 장수말벌 군단! 꿀벌들의 열공 방어 작전', ep: 11 },
+          { id: '3JCR-D15Kow', title: '[생물극장 10화] 풀숲의 암살자 사마귀가 된 양박사! 사마귀의 사냥 본능', ep: 10 },
+          { id: 'zch92kSkN2Y', title: '[생물극장 9화] 참나무 수액터를 차지하라! 장수풍뎅이 vs 사슴벌레의 대결', ep: 9 },
+          { id: 'lKCr_5ApzCk', title: '[생물극장 8화] 올챙이에서 두꺼비가 되기까지! 두꺼비 형제의 대모험', ep: 8 },
+          { id: 'BLyJ3IcOUVA', title: '[생물극장 7화] 계곡 바위 밑 대장 민물가재의 영역 다툼 이야기', ep: 7 },
+          { id: 'Th6AQ4XdPDI', title: '[생물극장 6화] 하늘의 제왕 장수잠자리와 수채의 놀라운 사냥법', ep: 6 },
+          { id: 'dtiMOZvNtuk', title: '[생물극장 5화] 개미지옥에 빠진 개미를 구하라! 명주잠자리 애벌레의 비밀', ep: 5 },
+          { id: 'ce7nP9rAdLA', title: '[생물극장 4화] 땅속에서 오랜 세월을 기다린 매미 애벌레의 감동 날개돋이', ep: 4 },
+          { id: '5wrHMLKs7jY', title: '[생물극장 3화] 갯벌 구멍 속 숨바꼭질 달인! 칠게와 짱뚱어의 하루', ep: 3 },
+          { id: 'a6VsxFv4Pb8', title: '[생물극장 2화] 공처럼 둥글게 말리는 공벌레와 쥐며느리의 생존 비법', ep: 2 },
+          { id: 'sEUdQv1Wnxo', title: '[생물극장 1화] 겨울잠 자러 땅속으로 들어간 개구리와 곤충 친구들', ep: 1 }
+        ]
+      },
+      {
+        id: 'other_insects',
+        title: '기타곤충',
+        icon: '🦗',
+        updatedLabel: '곤충 재생목록',
+        description: '사마귀, 잠자리, 하늘소, 여치, 대벌레, 물방개, 나비 등 다양한 곤충 도감 (15편)',
+        videos: [
+          { id: '3JCR-D15Kow', title: '[기타곤충 15화] 역대급 크기! 숲속의 사냥꾼 대왕 사마귀를 잡았습니다!', ep: 15 },
+          { id: 'Th6AQ4XdPDI', title: '[기타곤충 14화] 속눈썹을 가진 신비한 잠자리 발견?! 여름밤 등화채집 탐사', ep: 14 },
+          { id: '4AVDbc_ZKmk', title: '[기타곤충 13화] 수백만 년의 전쟁! 장수말벌과 꿀벌의 놀라운 생태 관찰', ep: 13 },
+          { id: 'a6VsxFv4Pb8', title: '[기타곤충 12화] 태풍 지나간 산속 생물 구출! 거대 울도하늘소와 사향하늘소 만남', ep: 12 },
+          { id: 'dtiMOZvNtuk', title: '[기타곤충 11화] 멋진 곤충 총출동! 사마귀, 여치, 방아깨비, 메뚜기 가을 풀숲 채집', ep: 11 },
+          { id: '6yafcGumVlo', title: '[기타곤충 10화] 물속의 폭군 물장군과 물방개! 수생곤충 사냥 모습 정밀 관찰', ep: 10 },
+          { id: 'RgKAFK5djSk', title: '[기타곤충 9화] 넓적배사마귀와 좀사마귀, 왕사마귀 3종 비교 관찰 도감!', ep: 9 },
+          { id: 'lp-EO5I60KA', title: '[기타곤충 8화] 땅속 개미집 단면 관찰! 여왕개미와 병정개미의 신기한 사회', ep: 8 },
+          { id: 'fRh_vgS2dFE', title: '[기타곤충 7화] 호랑나비 애벌레에서 번데기, 화려한 나비로 우화하는 순간!', ep: 7 },
+          { id: 'sEUdQv1Wnxo', title: '[기타곤충 6화] 나뭇가지랑 똑같이 생긴 대벌레와 가랑잎벌레 위장술 테스트', ep: 6 },
+          { id: 'IvMnNYvODAQ', title: '[기타곤충 5화] 여름철 매미 대합창! 참매미, 말매미, 애매미, 유지매미 채집 도감', ep: 5 },
+          { id: 'zKmSrgC0tzE', title: '[기타곤충 4화] 땅속의 두더지 땅강아지와 귀뚜라미 친구들을 찾아라!', ep: 4 },
+          { id: '7b_nFfdE-1A', title: '[기타곤충 3화] 초록빛 보석 곤충! 비단벌레와 길앞잡이 숲속 탐사기', ep: 3 },
+          { id: 'ce7nP9rAdLA', title: '[기타곤충 2화] 뽕나무 밭의 거대 하늘소와 바구미 친구들 관찰하기', ep: 2 },
+          { id: '2Vv-BfVoq4g', title: '[기타곤충 1화] 봄날 꽃밭에 찾아온 호박벌, 제비나비, 무당벌레 친구들', ep: 1 }
+        ]
+      },
+      {
+        id: 'beetles',
+        title: '사슴벌레·장수풍뎅이',
+        icon: '🪲',
+        updatedLabel: '인기 갑충 도감',
+        description: '장수풍뎅이, 넓적사슴벌레, 왕사슴벌레, 헤라클레스 등 인기 갑충 시리즈 (14편)',
+        videos: [
+          { id: 'zch92kSkN2Y', title: '[갑충도감 14화] 흙 속에서 장수풍뎅이가 계속 나온다?! 출동! 에그박사', ep: 14 },
+          { id: '7b_nFfdE-1A', title: '[갑충도감 13화] 참나무 수액터의 제왕! 왕사슴벌레와 넓적사슴벌레 야간 탐사', ep: 13 },
+          { id: 'IvMnNYvODAQ', title: '[갑충도감 12화] 100% 블록으로 초대형 장수풍뎅이 사육장 만들기!', ep: 12 },
+          { id: 'ce7nP9rAdLA', title: '[갑충도감 11화] 장수풍뎅이 애벌레 50마리 새집(발효톱밥) 만들어주기 대작전!', ep: 11 },
+          { id: 'hT_nvWreIhg', title: '[갑충도감 10화] 세계 최대 갑충! 헤라클레스 장수풍뎅이와 코카서스 실물 영접', ep: 10 },
+          { id: 'ZbZSe6N_BXs', title: '[갑충도감 9화] 거대 넓적사슴벌레 vs 톱사슴벌레! 멋진 턱 힘겨루기 관찰', ep: 9 },
+          { id: 'fRh_vgS2dFE', title: '[갑충도감 8화] 장수풍뎅이 애벌레에서 번데기, 멋진 뿔 성충으로 우화하는 과정', ep: 8 },
+          { id: '2Vv-BfVoq4g', title: '[갑충도감 7화] 여름 숲속 참나무 수액 곤충 채집! 장수풍뎅이와 사슴벌레 만남', ep: 7 },
+          { id: 'dtiMOZvNtuk', title: '[갑충도감 6화] 사슴벌레와 장수풍뎅이 겨울나기 & 표본·블록 도감 만들기', ep: 6 },
+          { id: 'E4tGIWepaPk', title: '[갑충도감 5화] 황금빛 기라파톱사슴벌레와 뮤엘러리 무지개 사슴벌레 관찰', ep: 5 },
+          { id: '3JCR-D15Kow', title: '[갑충도감 4화] 썩은 참나무 산란목 해체! 왕사슴벌레 유충 찾기', ep: 4 },
+          { id: 'Th6AQ4XdPDI', title: '[갑충도감 3화] 빨간 몸통의 외뿔장수풍뎅이와 둥글장수풍뎅이 관찰기', ep: 3 },
+          { id: 'a6VsxFv4Pb8', title: '[갑충도감 2화] 다우리아사슴벌레와 홍다리사슴벌레 강원도 고산지대 탐사', ep: 2 },
+          { id: 'sEUdQv1Wnxo', title: '[갑충도감 1화] 장수풍뎅이 짝짓기부터 알, 1령·2령·3령 애벌레 한살이 총정리', ep: 1 }
+        ]
+      },
+      {
+        id: 'nature_explore',
+        title: '자연탐사·야외채집',
+        icon: '🌿',
+        updatedLabel: '야외 대모험',
+        description: '전국 산과 숲, 계곡, 갯벌, 저수지로 직접 출동하는 에그박사 야외 자연탐사 (12편)',
+        videos: [
+          { id: 'a6VsxFv4Pb8', title: '[자연탐사 12화] 태풍 지나간 산속 생물 구출 대작전! 물두꺼비와 울도하늘소', ep: 12 },
+          { id: 'sEUdQv1Wnxo', title: '[자연탐사 11화] 땅 깊숙이 겨울잠 자는 생물들과 곤충 관찰하기!', ep: 11 },
+          { id: '5MiZffk_j0U', title: '[자연탐사 10화] 에그박사 출동! 신비한 바닷가 갯벌 생물 찾기 대결', ep: 10 },
+          { id: '5wrHMLKs7jY', title: '[자연탐사 9화] 맛조개, 쏙, 바다조개 채집 & 시원한 계곡 생물 놀이 끝판왕!', ep: 9 },
+          { id: '6yafcGumVlo', title: '[자연탐사 8화] 비 오는 날 계곡과 연못 족대질! 대왕 물속 생물 채집 탐사', ep: 8 },
+          { id: 'zKmSrgC0tzE', title: '[자연탐사 7화] 물 빠진 저수지 바닥 탐사! 과연 어떤 생물이 살고 있을까?', ep: 7 },
+          { id: '2Vv-BfVoq4g', title: '[자연탐사 6화] 한여름 밤의 숲속 등화채집과 수액 나무 탐사 대모험', ep: 6 },
+          { id: 'JGwWNGJdvx8', title: '[자연탐사 5화] 청정 1급수 강원도 계곡 바위 밑 생물 대탐사!', ep: 5 },
+          { id: 'BLyJ3IcOUVA', title: '[자연탐사 4화] 숲속 옹달샘과 바위 계곡에서 만난 가재와 도롱뇽', ep: 4 },
+          { id: 'lKCr_5ApzCk', title: '[자연탐사 3화] 봄비 내리는 밤 논두렁과 습지 생물 야간 탐사대', ep: 3 },
+          { id: 'jABYQF4nnl8', title: '[자연탐사 2화] 제주도 곶자왈 숲과 화산송이 바위틈 희귀 생물 찾기', ep: 2 },
+          { id: 'kJQP7kiw5Fk', title: '[자연탐사 1화] 가을 들판과 억새숲 메뚜기·사마귀 채집 대탐험', ep: 1 }
+        ]
+      },
+      {
+        id: 'reptiles_amphibians',
+        title: '파충류·양서류',
+        icon: '🦎',
+        updatedLabel: '도마뱀·개구리',
+        description: '크레스티드 게코, 이구아나, 카멜레온, 두꺼비, 청개구리, 도롱뇽 관찰 시리즈 (12편)',
+        videos: [
+          { id: '2Rszvj8OUMo', title: '[파충류·양서류 12화] 귀여운 게코도마뱀 인간이 된 닥터웅?! 게코도마뱀 생태 도감', ep: 12 },
+          { id: 'E4tGIWepaPk', title: '[파충류·양서류 11화] 초희귀 공룡 닮은 생물! 라이노 이구아나 길들이기', ep: 11 },
+          { id: 'lKCr_5ApzCk', title: '[파충류·양서류 10화] 두꺼비 올챙이 수천 마리의 신비한 대량이동 순간 포착!', ep: 10 },
+          { id: 'jABYQF4nnl8', title: '[파충류·양서류 9화] 초희귀 양서류 총출동! 붉은꼬리혹영원과 녹색두꺼비 관찰', ep: 9 },
+          { id: 'OPf0YbXqDm0', title: '[파충류·양서류 8화] 크레스티드 게코 도마뱀과 레오파드 게코 먹이주기 & 집 꾸미기', ep: 8 },
+          { id: 'YQHsXMglC9A', title: '[파충류·양서류 7화] 신기한 카멜레온 색깔 변신 실험과 긴 혀 사냥 포착', ep: 7 },
+          { id: 'CevxZvSJLk8', title: '[파충류·양서류 6화] 비 오는 날 밤 논두렁 탐사! 청개구리, 참개구리, 맹꽁이 합창', ep: 6 },
+          { id: 'a6VsxFv4Pb8', title: '[파충류·양서류 5화] 턱수염도마뱀 비어디드래곤과 블루텅 스킨크 교감하기', ep: 5 },
+          { id: '5MiZffk_j0U', title: '[파충류·양서류 4화] 등껍질이 단단한 육지거북 설가타와 반수생 거북이 관찰', ep: 4 },
+          { id: '6yafcGumVlo', title: '[파충류·양서류 3화] 1급수 계곡의 우파루파 닮은 한국 도롱뇽과 꼬리치레도롱뇽', ep: 3 },
+          { id: 'zKmSrgC0tzE', title: '[파충류·양서류 2화] 풀숲을 재빠르게 달리는 줄장지뱀과 도마뱀 관찰기', ep: 2 },
+          { id: 'sEUdQv1Wnxo', title: '[파충류·양서류 1화] 무당개구리와 계곡 산개구리의 놀라운 보호색 비밀', ep: 1 }
+        ]
+      },
+      {
+        id: 'aquatic_marine',
+        title: '수생·바다생물',
+        icon: '🦀',
+        updatedLabel: '계곡·갯벌·바다',
+        description: '민물가재, 갯벌 칠게, 맛조개, 쏙, 계곡 민물고기, 해루질 바다생물 도감 (12편)',
+        videos: [
+          { id: 'BLyJ3IcOUVA', title: '[수생·바다 12화] 집게발이 멋진 민물가재와 물속 생물 친구들을 관찰해요!', ep: 12 },
+          { id: '5wrHMLKs7jY', title: '[수생·바다 11화] 맛조개, 쏙, 바다조개 채집 & 시원한 계곡 생물 놀이 끝판왕!', ep: 11 },
+          { id: '6yafcGumVlo', title: '[수생·바다 10화] 비 오는 날 계곡과 연못 족대질! 대왕 물속 생물 채집 탐사', ep: 10 },
+          { id: 'zKmSrgC0tzE', title: '[수생·바다 9화] 물 빠진 저수지 바닥 탐사! 메기, 가물치, 말조개 찾기', ep: 9 },
+          { id: '5MiZffk_j0U', title: '[수생·바다 8화] 서해안 갯벌 생물 찾기 대결! 농게, 칠게, 바지락, 동죽 채집', ep: 8 },
+          { id: 'JGwWNGJdvx8', title: '[수생·바다 7화] 계곡 바위 밑 민물가재, 다슬기, 꺽지, 버들치 생태 관찰', ep: 7 },
+          { id: '09R8_2nJtjg', title: '[수생·바다 6화] 바다 바위틈 조수웅덩이 해루질! 꽃게, 소라게, 문어, 불가사리', ep: 6 },
+          { id: 'kJQP7kiw5Fk', title: '[수생·바다 5화] 갯벌 구멍에 된장을 넣으면 쏙이 올라올까? 신기한 갯벌 체험', ep: 5 },
+          { id: 'E4tGIWepaPk', title: '[수생·바다 4화] 색깔이 아름다운 열대어 구피 키우기와 치어 부화 관찰', ep: 4 },
+          { id: 'Th6AQ4XdPDI', title: '[수생·바다 3화] 어항 청소부 생이새우, 비파와 우렁이 친구들 합사하기', ep: 3 },
+          { id: '4AVDbc_ZKmk', title: '[수생·바다 2화] 바닷가 바위 밑 박하지(민꽃게)와 군소, 해삼 관찰기', ep: 2 },
+          { id: 'ce7nP9rAdLA', title: '[수생·바다 1화] 연못 속 잠자리 수채와 게아재비, 장구애비 사냥 순간', ep: 1 }
+        ]
+      }
     ];
 
-    // 에그박사 채널 대표 에피소드 (최신순 정렬 기본 시드 + 실시간 RSS & 채널 플레이리스트와 자동 병합)
-    const INITIAL_VIDEOS = [
-      { id: '2Vv-BfVoq4g', title: '에그박사 여름 숲속 참나무 수액 곤충 채집 대작전! 장수풍뎅이와 사슴벌레 만남', category: 'explore', badge: '🌿 자연탐사', date: '2026-11-15' },
-      { id: 'ZbZSe6N_BXs', title: '거대 넓적사슴벌레 vs 왕사슴벌레! 에그박사 곤충 도감 관찰기', category: 'insect', badge: '🪲 곤충도감', date: '2026-11-12' },
-      { id: 'OPf0YbXqDm0', title: '귀여운 크레스티드 게코 도마뱀과 레오파드 게코 먹이주기 & 집 꾸미기', category: 'reptile', badge: '🦎 파충류', date: '2026-11-10' },
-      { id: 'kJQP7kiw5Fk', title: '서해안 갯벌 대탐험! 구멍 속 숨어있는 칠게, 바지락, 쏙 채집하기', category: 'aquatic', badge: '🦀 갯벌탐사', date: '2026-11-08' },
-      { id: 'RgKAFK5djSk', title: '사마귀의 사냥 본능! 왕사마귀와 넓적배사마귀 생태 정밀 관찰', category: 'insect', badge: '🪲 사마귀', date: '2026-11-05' },
-      { id: 'JGwWNGJdvx8', title: '계곡 바위 밑에는 누가 살까? 민물가재, 옆새우, 물방개 채집 탐사', category: 'aquatic', badge: '🦀 계곡탐사', date: '2026-11-03' },
-      { id: 'fRh_vgS2dFE', title: '장수풍뎅이 애벌레에서 번데기, 멋진 성충으로 우화하는 신비한 과정', category: 'lab', badge: '🔬 한살이관찰', date: '2026-10-30' },
-      { id: 'CevxZvSJLk8', title: '비 오는 날 밤 논두렁 탐사! 청개구리, 참개구리, 두꺼비 총출동', category: 'reptile', badge: '🐸 양서류', date: '2026-10-27' },
-      { id: 'hT_nvWreIhg', title: '초대형 헤라클레스 장수풍뎅이 실물 영접! 세계의 희귀 곤충 도감', category: 'insect', badge: '🪲 희귀곤충', date: '2026-10-24' },
-      { id: 'YQHsXMglC9A', title: '신기한 카멜레온 색깔 변신 실험과 혀로 귀뚜라미 사냥하는 순간 포착', category: 'reptile', badge: '🦎 카멜레온', date: '2026-10-20' },
-      { id: '09R8_2nJtjg', title: '바다 바위 틈 해루질! 꽃게, 소라게, 문어, 불가사리 직접 찾아보기', category: 'aquatic', badge: '🐙 바다생물', date: '2026-10-16' },
-      { id: 'lp-EO5I60KA', title: '개미집 단면 관찰 실험! 여왕개미와 일개미들이 땅속 미로를 파는 모습', category: 'lab', badge: '🔬 생물실험', date: '2026-10-11' }
-    ];
+    // =========================================================================
+    // 2. 상태(State) 및 LocalStorage 관리
+    // =========================================================================
+    const STORAGE_PLAYLISTS_KEY = 'egg_yt_playlists_v5';
+    const STORAGE_PROGRESS_KEY = 'egg_watch_progress_v5';
+    const STORAGE_FAV_KEY = 'egg_favorites_v5';
 
-    const STORAGE_VIDEOS_KEY = 'egg_world_videos_cache_v3';
-    const STORAGE_PROGRESS_KEY = 'egg_world_watch_progress_v3';
-    const STORAGE_FAV_KEY = 'egg_world_favorites_v3';
-    const STORAGE_LAST_KEY = 'egg_world_last_watched_v3';
+    let viewMode = 'playlists_overview'; // 'playlists_overview' | 'playlist_detail'
+    let activePlaylistId = 'australia';
+    let episodeSortOrder = 'newest'; // 'newest' (19화→1화) | 'oldest' (1화→19화)
+    let searchQuery = '';
+    let gridColumns = Number(localStorage.getItem('egg_grid_cols') || 3);
 
-    let currentTab = 'latest';
-    let gridCols = 3;
-    let ytPlayer = null;
-    let extractorPlayer = null;
-    let currentVideo = null;
-    let progressTimer = null;
-    let extractedChannelIds = [];
-    let loadCursor = 0;
-
-    let videoList = JSON.parse(localStorage.getItem(STORAGE_VIDEOS_KEY) || 'null') || INITIAL_VIDEOS;
+    let playlists = JSON.parse(localStorage.getItem(STORAGE_PLAYLISTS_KEY) || 'null') || INITIAL_PLAYLISTS;
     let watchProgress = JSON.parse(localStorage.getItem(STORAGE_PROGRESS_KEY) || '{}');
     let favorites = JSON.parse(localStorage.getItem(STORAGE_FAV_KEY) || '[]');
 
-    // 제목 키워드로 에그박사 재생목록 자동 분류
-    function detectCategoryAndBadge(title) {
-      const t = title || '';
-      if (/(도마뱀|게코|카멜레온|거북|개구리|두꺼비|뱀|이구아나|맹꽁이|파충류|양서류)/.test(t)) {
-        return { category: 'reptile', badge: '🦎 파충류·양서류' };
-      }
-      if (/(갯벌|바다|가재|물방개|게|소라|문어|물고기|계곡|수생|어항|해루질|새우|우렁이)/.test(t)) {
-        return { category: 'aquatic', badge: '🦀 수생·바다' };
-      }
-      if (/(실험|관찰|한살이|번데기|부화|우화|현미경|키우기|도감)/.test(t)) {
-        return { category: 'lab', badge: '🔬 관찰·실험' };
-      }
-      if (/(탐사|채집|숲|산|야외|캠핑|출동|찾아|탐험)/.test(t)) {
-        return { category: 'explore', badge: '🌿 자연탐사' };
-      }
-      return { category: 'insect', badge: '🪲 곤충·절지류' };
+    let ytPlayer = null;
+    let isYtApiReady = false;
+    let activeModalVideoId = null;
+    let progressTimer = null;
+
+    function savePlaylistsToStorage() {
+      localStorage.setItem(STORAGE_PLAYLISTS_KEY, JSON.stringify(playlists));
     }
 
-    // 1) 에그박사 공식 유튜브 RSS에서 실시간 최신 영상들을 가져와 최신순으로 병합
-    async function syncEggbugsLatestRSS() {
-      try {
-        const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${EGG_CHANNEL_ID}`;
-        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
-        const res = await fetch(apiUrl);
-        const data = await res.json();
-        if (data && Array.isArray(data.items)) {
-          let added = 0;
-          data.items.forEach(item => {
-            const vid = (item.guid || '').split(':').pop() || extractYoutubeId(item.link || '');
-            if (vid && !videoList.some(v => v.id === vid)) {
-              const info = detectCategoryAndBadge(item.title);
-              videoList.unshift({
-                id: vid,
-                title: item.title,
-                category: info.category,
-                badge: info.badge,
-                date: (item.pubDate || '').slice(0, 10)
-              });
-              added++;
-            }
-          });
-          if (added > 0) {
-            localStorage.setItem(STORAGE_VIDEOS_KEY, JSON.stringify(videoList));
+    function getAllUniqueVideos() {
+      const map = new Map();
+      playlists.forEach(pl => {
+        pl.videos.forEach(v => {
+          if (!map.has(v.id)) {
+            map.set(v.id, { ...v, playlistId: pl.id, playlistTitle: pl.title, icon: pl.icon });
           }
-          document.getElementById('syncBadge').textContent = `최신순 동기화 완료 (${videoList.length}편+)`;
-          renderTabs();
-          renderGrid();
-        }
-      } catch (e) {
-        console.warn('RSS 동기화 생략:', e);
-      }
-    }
-
-    // 2) 유튜브 IFrame API로 에그박사 업로드 플레이리스트(UUyhmwp12LECf7lvw7vddVPA)에서 영상 ID 대량 추출
-    function onYouTubeIframeAPIReady() {
-      extractorPlayer = new YT.Player('hiddenExtractor', {
-        height: '1',
-        width: '1',
-        playerVars: {
-          listType: 'playlist',
-          list: EGG_UPLOADS_PLAYLIST_ID,
-          autoplay: 0,
-          controls: 0
-        },
-        events: {
-          onReady: (e) => {
-            setTimeout(() => {
-              try {
-                const ids = e.target.getPlaylist() || [];
-                if (ids.length > 0) {
-                  extractedChannelIds = ids;
-                  loadMoreFromChannel(18); // 첫 화면에 최신 업로드 18개 자동 채우기
-                }
-              } catch (err) {}
-            }, 1200);
-          }
-        }
+        });
       });
-    }
-
-    // 채널 플레이리스트에서 다음 영상들을 oEmbed 제목과 함께 불러와 그리드 카드로 추가
-    async function loadMoreFromChannel(batchSize = 12) {
-      const btn = document.getElementById('loadMoreBtn');
-      btn.textContent = '⏳ 에그박사 채널에서 영상 불러오는 중...';
-
-      const slice = extractedChannelIds.slice(loadCursor, loadCursor + batchSize);
-      loadCursor += slice.length;
-
-      for (const vid of slice) {
-        if (!videoList.some(v => v.id === vid)) {
-          let title = '에그박사 생물 탐사 에피소드';
-          try {
-            const resp = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${vid}`);
-            const meta = await resp.json();
-            if (meta && meta.title) title = meta.title;
-          } catch (e) {}
-          const info = detectCategoryAndBadge(title);
-          videoList.push({
-            id: vid,
-            title: title,
-            category: info.category,
-            badge: info.badge,
-            date: '최신순'
-          });
-        }
-      }
-
-      localStorage.setItem(STORAGE_VIDEOS_KEY, JSON.stringify(videoList));
-      document.getElementById('syncBadge').textContent = `채널 ${videoList.length}편 로드됨`;
-      btn.textContent = '+ 이 재생목록의 다음 에그박사 영상 더 불러오기';
-      renderTabs();
-      renderGrid();
+      return Array.from(map.values());
     }
 
     function formatTime(sec) {
-      sec = Math.max(0, Math.floor(sec || 0));
-      return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+      const s = Math.max(0, Math.floor(sec || 0));
+      const m = Math.floor(s / 60);
+      const rem = s % 60;
+      return `${String(m).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
     }
 
-    function renderTabs() {
-      const container = document.getElementById('playlistTabs');
-      container.innerHTML = PLAYLIST_TABS.map(tab => {
-        let count = 0;
-        if (tab.id === 'latest') count = videoList.length;
-        else if (tab.id === 'resume') count = Object.keys(watchProgress).filter(id => watchProgress[id]?.time > 5).length;
-        else if (tab.id === 'fav') count = favorites.length;
-        else count = videoList.filter(v => v.category === tab.id).length;
+    function getWatchingVideoIds() {
+      return Object.entries(watchProgress)
+        .filter(([_, data]) => data && data.currentTime >= 5 && (!data.duration || data.currentTime / data.duration < 0.95))
+        .sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0))
+        .map(([id]) => id);
+    }
 
-        const active = currentTab === tab.id;
-        return `
-          <button onclick="selectTab('${tab.id}')"
-            class="flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${
-              active
-                ? 'bg-lime-400 text-emerald-950 shadow-md scale-[1.02]'
-                : 'bg-emerald-900/80 text-emerald-100 hover:bg-emerald-800'
-            }">
-            <span>${tab.icon}</span>
-            <span>${tab.name}</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded-full ${active ? 'bg-emerald-950/20 text-emerald-950' : 'bg-emerald-800 text-lime-300'}">${count}</span>
+    // =========================================================================
+    // 3. 상단 탭 바 & 뷰 전환
+    // =========================================================================
+    function renderTopNavTabs() {
+      const container = document.getElementById('topNavTabs');
+      const watchingCount = getWatchingVideoIds().length;
+      const favCount = favorites.length;
+      const folderBtnActive = viewMode === 'playlists_overview';
+
+      let html = `
+        <button
+          onclick="openPlaylistsOverview()"
+          class="tab-pill ${folderBtnActive ? 'active' : 'bg-emerald-950/90 text-emerald-100 border-emerald-700/80 hover:bg-emerald-900'} px-3 py-1.5 rounded-xl border font-jua text-xs sm:text-sm flex items-center gap-1.5 shrink-0 transition"
+        >
+          <span>📂 전체 재생목록</span>
+          <span class="text-[10px] font-sans font-extrabold px-1.5 py-0.2 rounded-full ${folderBtnActive ? 'bg-emerald-950/25 text-emerald-950' : 'bg-emerald-800 text-lime-300'}">
+            ${playlists.length}
+          </span>
+        </button>
+      `;
+
+      playlists.forEach(pl => {
+        const isActive = viewMode === 'playlist_detail' && activePlaylistId === pl.id;
+        html += `
+          <button
+            onclick="openPlaylistDetail('${pl.id}')"
+            class="tab-pill ${isActive ? 'active' : 'bg-emerald-950/90 text-emerald-100 border-emerald-700/70 hover:bg-emerald-900'} px-2.5 sm:px-3 py-1.5 rounded-xl border font-jua text-xs sm:text-sm flex items-center gap-1.5 shrink-0 transition"
+          >
+            <span>${pl.icon}</span>
+            <span>${escapeHtml(pl.title)}</span>
+            <span class="text-[10px] font-sans font-extrabold px-1.5 py-0.2 rounded-full ${isActive ? 'bg-emerald-950/25 text-emerald-950' : 'bg-emerald-800/90 text-lime-300'}">
+              ${pl.videos.length}
+            </span>
           </button>
+        `;
+      });
+
+      const isWatchingActive = viewMode === 'playlist_detail' && activePlaylistId === '__watching__';
+      html += `
+        <button
+          onclick="openPlaylistDetail('__watching__')"
+          class="tab-pill ${isWatchingActive ? 'active' : 'bg-emerald-950/90 text-emerald-100 border-emerald-700/70 hover:bg-emerald-900'} px-2.5 sm:px-3 py-1.5 rounded-xl border font-jua text-xs sm:text-sm flex items-center gap-1.5 shrink-0 transition"
+        >
+          <span>⏱️ 이어보기</span>
+          <span class="text-[10px] font-sans font-extrabold px-1.5 py-0.2 rounded-full ${isWatchingActive ? 'bg-emerald-950/25 text-emerald-950' : 'bg-lime-400 text-emerald-950'}">
+            ${watchingCount}
+          </span>
+        </button>
+      `;
+
+      const isFavActive = viewMode === 'playlist_detail' && activePlaylistId === '__favorites__';
+      html += `
+        <button
+          onclick="openPlaylistDetail('__favorites__')"
+          class="tab-pill ${isFavActive ? 'active' : 'bg-emerald-950/90 text-emerald-100 border-emerald-700/70 hover:bg-emerald-900'} px-2.5 sm:px-3 py-1.5 rounded-xl border font-jua text-xs sm:text-sm flex items-center gap-1.5 shrink-0 transition"
+        >
+          <span>⭐ 찜한 영상</span>
+          <span class="text-[10px] font-sans font-extrabold px-1.5 py-0.2 rounded-full ${isFavActive ? 'bg-emerald-950/25 text-emerald-950' : 'bg-emerald-800 text-lime-300'}">
+            ${favCount}
+          </span>
+        </button>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function openPlaylistsOverview() {
+      viewMode = 'playlists_overview';
+      searchQuery = '';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      renderAll();
+    }
+
+    function openPlaylistDetail(playlistId) {
+      viewMode = 'playlist_detail';
+      activePlaylistId = playlistId;
+      renderAll();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleEpisodeSortOrder() {
+      episodeSortOrder = episodeSortOrder === 'newest' ? 'oldest' : 'newest';
+      document.getElementById('sortToggleLabel').textContent =
+        episodeSortOrder === 'newest' ? '최신순 (마지막화→1화)' : '1화부터 순서대로 (1화→마지막화)';
+      renderAll();
+    }
+
+    // =========================================================================
+    // 4. VIEW 1: '📂 전체 재생목록' 3열 폴더 그리드 렌더링
+    // =========================================================================
+    function renderPlaylistsOverviewGrid() {
+      const folderSection = document.getElementById('playlistsFolderSection');
+      const videosSection = document.getElementById('videosGridSection');
+      const headerBar = document.getElementById('playlistHeaderBar');
+      const grid = document.getElementById('playlistsGrid');
+      const badge = document.getElementById('headerCountBadge');
+
+      folderSection.classList.remove('hidden');
+      videosSection.classList.add('hidden');
+      headerBar.classList.add('hidden');
+
+      applyGridColumnClass(grid);
+
+      let filteredPlaylists = playlists;
+      if (searchQuery.trim() !== '') {
+        const q = searchQuery.trim().toLowerCase();
+        filteredPlaylists = playlists.filter(pl =>
+          pl.title.toLowerCase().includes(q) ||
+          (pl.description && pl.description.toLowerCase().includes(q)) ||
+          pl.videos.some(v => v.title.toLowerCase().includes(q))
+        );
+      }
+
+      badge.textContent = `재생목록 ${filteredPlaylists.length}개`;
+
+      grid.innerHTML = filteredPlaylists.map(pl => {
+        const firstVideo = pl.videos[0] || { id: 'E4tGIWepaPk', title: pl.title };
+        const coverThumb = `https://img.youtube.com/vi/${firstVideo.id}/mqdefault.jpg`;
+        const videoCount = pl.videos.length;
+
+        const inProgressCount = pl.videos.filter(v => {
+          const p = watchProgress[v.id];
+          return p && p.currentTime >= 5 && (!p.duration || p.currentTime / p.duration < 0.95);
+        }).length;
+
+        return `
+          <article
+            onclick="openPlaylistDetail('${pl.id}')"
+            class="playlist-stack card-interactive cursor-pointer group rounded-2xl bg-[#112617] border border-emerald-700/80 hover:border-lime-400 overflow-hidden shadow-lg flex flex-col justify-between"
+          >
+            <!-- 16:9 유튜브 재생목록 커버 + 우측 하단 '동영상 N개' 오버레이 뱃지 -->
+            <div class="relative w-full pt-[54%] bg-slate-950 overflow-hidden z-10">
+              <img
+                src="${coverThumb}"
+                alt="${escapeHtml(pl.title)}"
+                loading="lazy"
+                class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-300"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-black/25"></div>
+
+              <!-- 좌측 상단 라벨 -->
+              <div class="absolute top-1.5 left-1.5 flex items-center gap-1">
+                <span class="px-2 py-0.5 rounded-lg bg-lime-400 text-emerald-950 font-jua text-[10px] sm:text-xs shadow">
+                  ${pl.icon} ${escapeHtml(pl.updatedLabel || '재생목록')}
+                </span>
+                ${inProgressCount > 0 ? `
+                  <span class="px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[10px] shadow">
+                    ⏱️ ${inProgressCount}개 시청중
+                  </span>
+                ` : ''}
+              </div>
+
+              <!-- 유튜브 스타일 우측 하단 '동영상 N개' 오버레이 뱃지 -->
+              <div class="absolute bottom-1.5 right-1.5 px-2.5 py-1 rounded-lg bg-black/85 backdrop-blur-sm border border-lime-400/40 text-white font-extrabold text-[11px] sm:text-xs flex items-center gap-1.5 shadow-lg">
+                <i class="fa-solid fa-bars-staggered text-lime-400 text-[10px]"></i>
+                <span>동영상 ${videoCount}개</span>
+              </div>
+            </div>
+
+            <!-- 재생목록 제목 & 설명 -->
+            <div class="p-2.5 sm:p-3 bg-gradient-to-b from-[#142e1b] to-[#0d1f12] flex-1 flex flex-col justify-between">
+              <div>
+                <h3 class="font-jua text-sm sm:text-base text-white group-hover:text-lime-300 truncate">
+                  ${pl.icon} ${escapeHtml(pl.title)}
+                </h3>
+                <p class="text-[11px] text-emerald-200/75 line-clamp-2 mt-0.5 leading-snug">
+                  ${escapeHtml(pl.description || `총 ${videoCount}개의 에피소드`)}
+                </p>
+              </div>
+              <div class="mt-1.5 pt-1.5 border-t border-emerald-800/60 flex items-center justify-between text-[11px] text-lime-300/90 font-bold truncate">
+                <span class="truncate">최신: ${escapeHtml(firstVideo.title)}</span>
+              </div>
+            </div>
+          </article>
         `;
       }).join('');
     }
 
-    function selectTab(tabId) {
-      currentTab = tabId;
-      renderTabs();
-      renderGrid();
-    }
-
-    function renderGrid() {
+    // =========================================================================
+    // 5. VIEW 2: 재생목록 내부 에피소드 3열 그리드 렌더링 (한 화면 9~12개 노출)
+    // =========================================================================
+    function renderPlaylistEpisodesView() {
+      const folderSection = document.getElementById('playlistsFolderSection');
+      const videosSection = document.getElementById('videosGridSection');
+      const headerBar = document.getElementById('playlistHeaderBar');
       const grid = document.getElementById('videoGrid');
-      let list = videoList;
+      const badge = document.getElementById('headerCountBadge');
+      const sortBtn = document.getElementById('sortToggleBtn');
 
-      if (currentTab === 'resume') {
-        list = videoList.filter(v => (watchProgress[v.id]?.time || 0) > 5);
-      } else if (currentTab === 'fav') {
-        list = videoList.filter(v => favorites.includes(v.id));
-      } else if (currentTab !== 'latest') {
-        list = videoList.filter(v => v.category === currentTab);
+      folderSection.classList.add('hidden');
+      videosSection.classList.remove('hidden');
+      headerBar.classList.remove('hidden');
+
+      applyGridColumnClass(grid);
+
+      let titleText = '';
+      let descText = '';
+      let badgeLabel = '🥚 에그박사';
+      let videos = [];
+
+      if (activePlaylistId === '__watching__') {
+        titleText = '⏱️ 보던 영상 이어보기';
+        descText = '중간에 보다가 종료한 영상입니다. 터치하면 멈춘 시간부터 바로 이어서 재생됩니다.';
+        badgeLabel = '⏱️ 이어보기';
+        sortBtn.classList.add('hidden');
+        const watchingIds = getWatchingVideoIds();
+        const allMap = new Map(getAllUniqueVideos().map(v => [v.id, v]));
+        videos = watchingIds.map(id => allMap.get(id)).filter(Boolean);
+      } else if (activePlaylistId === '__favorites__') {
+        titleText = '⭐ 찜한 에그박사 영상';
+        descText = '별표(⭐)를 눌러 저장해 둔 좋아하는 에피소드 모음입니다.';
+        badgeLabel = '⭐ 찜한 영상';
+        sortBtn.classList.add('hidden');
+        const allMap = new Map(getAllUniqueVideos().map(v => [v.id, v]));
+        videos = favorites.map(id => allMap.get(id)).filter(Boolean);
+      } else {
+        sortBtn.classList.remove('hidden');
+        const pl = playlists.find(p => p.id === activePlaylistId) || playlists[0];
+        titleText = `${pl.icon} ${pl.title}`;
+        descText = pl.description || '';
+        badgeLabel = `${pl.icon} ${pl.title}`;
+        videos = [...pl.videos];
+        if (episodeSortOrder === 'oldest') {
+          videos.reverse();
+        }
       }
 
-      if (list.length === 0) {
+      if (searchQuery.trim() !== '') {
+        const q = searchQuery.trim().toLowerCase();
+        videos = videos.filter(v => v.title.toLowerCase().includes(q));
+      }
+
+      document.getElementById('activePlaylistTitle').textContent = titleText;
+      document.getElementById('activePlaylistCount').textContent = `동영상 ${videos.length}개`;
+      document.getElementById('activePlaylistDesc').textContent = descText;
+      badge.textContent = `동영상 ${videos.length}개`;
+
+      if (videos.length === 0) {
         grid.innerHTML = `
-          <div class="col-span-full py-14 text-center text-emerald-300/80 text-sm">
-            아직 표시할 영상이 없습니다. 아래 [더 불러오기] 또는 상단 [+ 영상 추가]를 눌러보세요!
+          <div class="col-span-full my-8 text-center py-10 px-4 rounded-3xl bg-emerald-950/70 border border-emerald-800/70 max-w-md mx-auto">
+            <div class="text-3xl mb-2">🪲</div>
+            <p class="font-jua text-base text-lime-300 mb-1">표시할 동영상이 없어요</p>
+            <p class="text-xs text-emerald-200/80 mb-4">전체 재생목록으로 돌아가거나 다른 재생목록을 선택해 보세요!</p>
+            <button onclick="openPlaylistsOverview()" class="px-4 py-2 rounded-xl bg-lime-400 text-emerald-950 font-extrabold text-xs">
+              ← 전체 재생목록 보기
+            </button>
           </div>
         `;
         return;
       }
 
-      grid.innerHTML = list.map(video => {
-        const prog = watchProgress[video.id];
-        const savedSec = prog ? Math.floor(prog.time || 0) : 0;
-        const duration = prog?.duration || 600;
-        const percent = savedSec > 5 ? Math.min(95, Math.round((savedSec / duration) * 100)) : 0;
+      grid.innerHTML = videos.map((video, idx) => {
         const isFav = favorites.includes(video.id);
+        const prog = watchProgress[video.id];
+        const hasResume = prog && prog.currentTime >= 5 && (!prog.duration || prog.currentTime / prog.duration < 0.95);
+        const pct = hasResume && prog.duration > 0
+          ? Math.min(95, Math.max(8, Math.round((prog.currentTime / prog.duration) * 100)))
+          : (hasResume ? 35 : 0);
+
+        const thumbUrl = `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`;
+        const safeTitle = escapeHtml(video.title);
+        const epTag = video.ep ? `${video.ep}화` : `${idx + 1}`;
 
         return `
-          <div onclick="openPlayer('${video.id}')"
-            class="card-zoom cursor-pointer group bg-[#113023] rounded-xl overflow-hidden border border-emerald-800/90 hover:border-lime-400 transition shadow-md flex flex-col">
-            <div class="relative aspect-video bg-black overflow-hidden">
-              <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg"
-                   alt="${video.title}"
-                   loading="lazy"
-                   class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-              <span class="absolute top-1.5 left-1.5 bg-black/75 backdrop-blur px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold text-lime-300">
-                ${video.badge || '🪲 에그박사'}
-              </span>
-              ${isFav ? `<span class="absolute top-1.5 right-1.5 text-xs bg-black/70 px-1.5 py-0.5 rounded">⭐</span>` : ''}
-              ${savedSec > 5 ? `
-                <span class="absolute bottom-2 right-1.5 bg-lime-400 text-emerald-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow">
-                  ⏱️ ${formatTime(savedSec)} 이어보기
+          <article
+            onclick="openPlayerModal('${video.id}', '${escapeHtml(badgeLabel)}')"
+            class="card-interactive cursor-pointer group relative rounded-xl bg-[#112617] border ${hasResume ? 'border-lime-400' : 'border-emerald-800/80'} hover:border-lime-400 overflow-hidden shadow-md flex flex-col justify-between"
+          >
+            <!-- 16:9 컴팩트 썸네일 (한 화면 9~12개 노출 최적화) -->
+            <div class="relative w-full pt-[50%] bg-slate-950 overflow-hidden">
+              <img
+                src="${thumbUrl}"
+                alt="${safeTitle}"
+                loading="lazy"
+                class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-300"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/25"></div>
+
+              <!-- 좌측 상단 에피소드 배지 -->
+              <div class="absolute top-1.5 left-1.5 flex items-center gap-1">
+                <span class="px-1.5 py-0.5 rounded bg-lime-400 text-emerald-950 font-jua text-[10px] sm:text-xs shadow">
+                  ${escapeHtml(badgeLabel)} · ${epTag}
                 </span>
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-emerald-950">
-                  <div class="h-full bg-lime-400" style="width:${percent}%"></div>
+              </div>
+
+              <!-- 우측 상단 찜하기 버튼 -->
+              <button
+                onclick="event.stopPropagation(); toggleFavorite('${video.id}')"
+                class="absolute top-1.5 right-1.5 w-6 h-6 sm:w-7 sm:h-7 rounded-lg ${
+                  isFav ? 'bg-lime-400 text-emerald-950' : 'bg-black/65 text-white hover:bg-black/85'
+                } flex items-center justify-center text-xs shadow border border-white/20"
+                title="찜하기"
+              >
+                <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+              </button>
+
+              <!-- 멈춘 시간 이어보기 뱃지 -->
+              ${hasResume ? `
+                <div class="absolute bottom-2 right-1.5 px-1.5 py-0.5 rounded bg-lime-400 text-emerald-950 font-extrabold text-[10px] shadow flex items-center gap-1">
+                  <span>⏱️ ${formatTime(prog.currentTime)} 이어보기</span>
+                </div>
+              ` : ''}
+
+              <!-- 하단 진행률 바 -->
+              ${hasResume ? `
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-black/80">
+                  <div class="h-full bg-lime-400" style="width:${pct}%"></div>
                 </div>
               ` : ''}
             </div>
-            <div class="p-2 flex-1 flex flex-col justify-between">
-              <h3 class="text-xs sm:text-sm font-bold text-emerald-50 line-clamp-2 leading-snug">${video.title}</h3>
+
+            <!-- 에피소드 제목 -->
+            <div class="p-2 flex-1 flex flex-col justify-between bg-gradient-to-b from-[#132a19] to-[#0e2012]">
+              <h3 class="font-bold text-xs sm:text-sm text-emerald-50 group-hover:text-lime-300 leading-snug line-clamp-2">
+                ${safeTitle}
+              </h3>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 6. 상단 '⏯️ 최근 보던 영상 바로 이어보기' 미니 배너 & 열 전환
+    // =========================================================================
+    function renderResumeBanner() {
+      const banner = document.getElementById('resumeWatchingBanner');
+      const listEl = document.getElementById('resumeWatchingList');
+      const watchingIds = getWatchingVideoIds();
+
+      if (watchingIds.length === 0) {
+        banner.classList.add('hidden');
+        return;
+      }
+
+      const allMap = new Map(getAllUniqueVideos().map(v => [v.id, v]));
+      const items = watchingIds
+        .map(id => {
+          const v = allMap.get(id);
+          if (!v) return null;
+          return { ...v, prog: watchProgress[id] };
+        })
+        .filter(Boolean);
+
+      if (items.length === 0) {
+        banner.classList.add('hidden');
+        return;
+      }
+
+      banner.classList.remove('hidden');
+      listEl.innerHTML = items.map(item => {
+        const cur = item.prog.currentTime || 0;
+        const dur = item.prog.duration || 0;
+        const pct = dur > 0 ? Math.min(95, Math.max(8, Math.round((cur / dur) * 100))) : 35;
+
+        return `
+          <div
+            onclick="openPlayerModal('${item.id}', '${escapeHtml(item.playlistTitle || '에그박사')}')"
+            class="flex items-center gap-2 bg-[#0b1b10] hover:bg-emerald-900 border border-lime-400/50 rounded-lg p-1 pr-2 cursor-pointer shrink-0 max-w-[230px] transition active:scale-95"
+          >
+            <div class="relative w-12 h-7 rounded overflow-hidden bg-black shrink-0">
+              <img src="https://img.youtube.com/vi/${item.id}/mqdefault.jpg" alt="" class="w-full h-full object-cover" />
+              <div class="absolute bottom-0 left-0 right-0 h-1 bg-black/70">
+                <div class="h-full bg-lime-400" style="width:${pct}%"></div>
+              </div>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="text-[10px] font-extrabold text-lime-300">
+                ⏱️ ${formatTime(cur)}
+              </div>
+              <div class="text-[11px] font-bold text-white truncate">
+                ${escapeHtml(item.title)}
+              </div>
             </div>
           </div>
         `;
       }).join('');
     }
 
-    function cycleGridCols() {
-      const grid = document.getElementById('videoGrid');
-      const btn = document.getElementById('gridToggleBtn');
-      grid.classList.remove('grid-cols-2', 'grid-cols-3', 'grid-cols-4');
-      gridCols = gridCols === 3 ? 4 : gridCols === 4 ? 2 : 3;
-      grid.classList.add(`grid-cols-${gridCols}`);
-      btn.textContent = `${gridCols}열`;
+    function applyGridColumnClass(gridEl) {
+      const label = document.getElementById('gridToggleLabel');
+      if (!gridEl) return;
+      gridEl.classList.remove('grid-cols-2', 'grid-cols-3', 'grid-cols-4');
+      if (gridColumns === 2) gridEl.classList.add('grid-cols-2');
+      else if (gridColumns === 4) gridEl.classList.add('grid-cols-4');
+      else {
+        gridColumns = 3;
+        gridEl.classList.add('grid-cols-3');
+      }
+      if (label) label.textContent = `${gridColumns}열`;
     }
 
-    // 단편 재생 및 멈춘 위치 이어보기
-    function openPlayer(videoId, forceStartZero = false) {
-      currentVideo = videoList.find(v => v.id === videoId) || { id: videoId, title: '에그박사 생물도감', badge: '🪲 에그박사' };
-      document.getElementById('modalTitle').textContent = currentVideo.title;
-      document.getElementById('modalBadge').textContent = currentVideo.badge || '🪲 에그박사';
+    function cycleGridColumns() {
+      if (gridColumns === 3) gridColumns = 4;
+      else if (gridColumns === 4) gridColumns = 2;
+      else gridColumns = 3;
+      localStorage.setItem('egg_grid_cols', String(gridColumns));
+      renderAll();
+      showToast(`화면 배치를 ${gridColumns}열 그리드로 변경했어요!`);
+    }
+
+    function renderAll() {
+      renderResumeBanner();
+      renderTopNavTabs();
+      if (viewMode === 'playlists_overview') {
+        renderPlaylistsOverviewGrid();
+      } else {
+        renderPlaylistEpisodesView();
+      }
+    }
+
+    // =========================================================================
+    // 7. 단편 모달 재생 & 멈춘 위치 초 단위 이어보기 (YouTube IFrame API)
+    // =========================================================================
+    window.onYouTubeIframeAPIReady = function () {
+      isYtApiReady = true;
+    };
+
+    function startProgressTracking() {
+      stopProgressTracking();
+      progressTimer = setInterval(saveCurrentPlaybackPosition, 1000);
+    }
+
+    function stopProgressTracking() {
+      if (progressTimer) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+      }
+    }
+
+    function saveCurrentPlaybackPosition() {
+      if (!ytPlayer || !activeModalVideoId || typeof ytPlayer.getCurrentTime !== 'function') return;
+      try {
+        const cur = ytPlayer.getCurrentTime();
+        const dur = ytPlayer.getDuration();
+        if (!cur || cur < 3) return;
+
+        if (dur > 0 && cur / dur >= 0.95) {
+          delete watchProgress[activeModalVideoId];
+        } else {
+          watchProgress[activeModalVideoId] = {
+            currentTime: Math.floor(cur),
+            duration: Math.floor(dur || 0),
+            updatedAt: Date.now()
+          };
+        }
+        localStorage.setItem(STORAGE_PROGRESS_KEY, JSON.stringify(watchProgress));
+
+        const statusEl = document.getElementById('modalSaveStatusText');
+        if (statusEl && dur > 0) {
+          statusEl.textContent = `⏱️ 시청 위치 실시간 저장 중 (${formatTime(cur)} / ${formatTime(dur)})`;
+        }
+      } catch (e) {}
+    }
+
+    function openPlayerModal(videoId, badgeText = '🥚 에그박사', forceFromStart = false) {
+      const allMap = new Map(getAllUniqueVideos().map(v => [v.id, v]));
+      const video = allMap.get(videoId) || { id: videoId, title: '에그박사 자연탐사 에피소드' };
+
+      activeModalVideoId = videoId;
+      document.getElementById('modalTitle').textContent = video.title;
+      document.getElementById('modalBadge').textContent = badgeText;
+
+      const prog = watchProgress[videoId];
+      const savedSec = (!forceFromStart && prog && prog.currentTime >= 5) ? prog.currentTime : 0;
+
+      const noticeBox = document.getElementById('modalResumeNotice');
+      const noticeText = document.getElementById('modalResumeNoticeText');
+      if (savedSec >= 5) {
+        noticeBox.classList.remove('hidden');
+        noticeText.textContent = `⏱️ 지난번 멈춘 위치(${formatTime(savedSec)})부터 바로 이어서 재생합니다!`;
+      } else {
+        noticeBox.classList.add('hidden');
+      }
+
+      updateModalFavButton();
       document.getElementById('playerModal').classList.remove('hidden');
-      updateFavBtnUI();
+      document.body.style.overflow = 'hidden';
 
-      const savedSec = forceStartZero ? 0 : Math.floor(watchProgress[videoId]?.time || 0);
-      document.getElementById('resumeStatusText').textContent =
-        savedSec > 5 ? `⏱️ 이전에 보던 ${formatTime(savedSec)} 위치부터 바로 이어서 재생합니다.` : `💡 보다가 닫아도 다음에 멈춘 위치부터 바로 이어서 재생됩니다.`;
+      loadVideoIntoModalPlayer(videoId, savedSec);
+    }
 
-      if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
-        ytPlayer.loadVideoById({ videoId: videoId, startSeconds: savedSec });
-      } else if (window.YT && window.YT.Player) {
-        ytPlayer = new YT.Player('ytPlayerContainer', {
+    function loadVideoIntoModalPlayer(videoId, startSeconds = 0) {
+      const container = document.getElementById('ytPlayerContainer');
+      if (ytPlayer && typeof ytPlayer.destroy === 'function') {
+        try { ytPlayer.destroy(); } catch (e) {}
+        ytPlayer = null;
+      }
+      container.innerHTML = '<div id="ytPlayerMount" class="w-full h-full"></div>';
+
+      if (isYtApiReady && window.YT && window.YT.Player) {
+        ytPlayer = new YT.Player('ytPlayerMount', {
+          width: '100%',
+          height: '100%',
           videoId: videoId,
           playerVars: {
             autoplay: 1,
             rel: 0,
             playsinline: 1,
-            start: savedSec
+            start: Math.floor(startSeconds || 0)
           },
           events: {
-            onStateChange: onPlayerStateChange
+            onReady: (event) => {
+              if (startSeconds > 0) event.target.seekTo(startSeconds, true);
+              event.target.playVideo();
+              startProgressTracking();
+            },
+            onStateChange: (event) => {
+              if (event.data === YT.PlayerState.PLAYING) {
+                startProgressTracking();
+              } else if (event.data === YT.PlayerState.PAUSED) {
+                saveCurrentPlaybackPosition();
+                stopProgressTracking();
+                renderAll();
+              } else if (event.data === YT.PlayerState.ENDED) {
+                stopProgressTracking();
+                if (activeModalVideoId) {
+                  delete watchProgress[activeModalVideoId];
+                  localStorage.setItem(STORAGE_PROGRESS_KEY, JSON.stringify(watchProgress));
+                }
+                renderAll();
+              }
+            }
           }
         });
-      }
-    }
-
-    function onPlayerStateChange(event) {
-      if (event.data === YT.PlayerState.PLAYING) {
-        clearInterval(progressTimer);
-        progressTimer = setInterval(saveCurrentTimestamp, 2000);
       } else {
-        saveCurrentTimestamp();
-        clearInterval(progressTimer);
-        if (event.data === YT.PlayerState.ENDED && currentVideo) {
-          delete watchProgress[currentVideo.id];
-          localStorage.setItem(STORAGE_PROGRESS_KEY, JSON.stringify(watchProgress));
-          renderTabs();
-          renderGrid();
-        }
-      }
-    }
-
-    function saveCurrentTimestamp() {
-      if (!ytPlayer || !currentVideo || typeof ytPlayer.getCurrentTime !== 'function') return;
-      const cur = ytPlayer.getCurrentTime();
-      const dur = ytPlayer.getDuration() || 600;
-      if (cur > 3) {
-        watchProgress[currentVideo.id] = { time: cur, duration: dur, updatedAt: Date.now() };
-        localStorage.setItem(STORAGE_PROGRESS_KEY, JSON.stringify(watchProgress));
-        localStorage.setItem(STORAGE_LAST_KEY, JSON.stringify({
-          id: currentVideo.id,
-          title: currentVideo.title,
-          time: cur
-        }));
-        updateLastWatchedBanner();
+        const startParam = startSeconds > 0 ? `&start=${Math.floor(startSeconds)}` : '';
+        container.innerHTML = `
+          <iframe
+            class="w-full h-full"
+            src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1${startParam}"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        `;
       }
     }
 
     function restartCurrentVideo() {
-      if (!currentVideo) return;
-      delete watchProgress[currentVideo.id];
+      if (!activeModalVideoId) return;
+      delete watchProgress[activeModalVideoId];
       localStorage.setItem(STORAGE_PROGRESS_KEY, JSON.stringify(watchProgress));
-      openPlayer(currentVideo.id, true);
+      document.getElementById('modalResumeNotice').classList.add('hidden');
+
+      if (ytPlayer && typeof ytPlayer.seekTo === 'function') {
+        ytPlayer.seekTo(0, true);
+        ytPlayer.playVideo();
+      } else {
+        loadVideoIntoModalPlayer(activeModalVideoId, 0);
+      }
+      showToast('처음(00:00)부터 다시 재생합니다!');
     }
 
     function closePlayerModal() {
-      saveCurrentTimestamp();
-      clearInterval(progressTimer);
-      if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
-        ytPlayer.pauseVideo();
+      saveCurrentPlaybackPosition();
+      stopProgressTracking();
+      if (ytPlayer && typeof ytPlayer.destroy === 'function') {
+        try { ytPlayer.destroy(); } catch (e) {}
+        ytPlayer = null;
       }
+      document.getElementById('ytPlayerContainer').innerHTML = '';
+      activeModalVideoId = null;
       document.getElementById('playerModal').classList.add('hidden');
-      renderTabs();
-      renderGrid();
+      document.body.style.overflow = '';
+      renderAll();
     }
 
-    function updateLastWatchedBanner() {
-      const last = JSON.parse(localStorage.getItem(STORAGE_LAST_KEY) || 'null');
-      const banner = document.getElementById('lastWatchedBanner');
-      if (!last || !last.id) {
-        banner.classList.add('hidden');
-        return;
-      }
-      banner.classList.remove('hidden');
-      document.getElementById('lastWatchedThumb').src = `https://img.youtube.com/vi/${last.id}/hqdefault.jpg`;
-      document.getElementById('lastWatchedTitle').textContent = last.title;
-      document.getElementById('lastWatchedTime').textContent = formatTime(last.time);
+    // =========================================================================
+    // 8. '+ 영상 추가' 및 검색/찜하기 기능
+    // =========================================================================
+    document.getElementById('addTargetPlaylist').addEventListener('change', function () {
+      const box = document.getElementById('newPlaylistNameBox');
+      if (this.value === 'NEW_PLAYLIST') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    });
+
+    function openAddModal() {
+      document.getElementById('addModal').classList.remove('hidden');
     }
 
-    function resumeLastWatched() {
-      const last = JSON.parse(localStorage.getItem(STORAGE_LAST_KEY) || 'null');
-      if (last && last.id) openPlayer(last.id);
+    function closeAddModal() {
+      document.getElementById('addModal').classList.add('hidden');
     }
 
-    function toggleFavoriteCurrent() {
-      if (!currentVideo) return;
-      const idx = favorites.indexOf(currentVideo.id);
-      if (idx >= 0) favorites.splice(idx, 1);
-      else favorites.push(currentVideo.id);
-      localStorage.setItem(STORAGE_FAV_KEY, JSON.stringify(favorites));
-      updateFavBtnUI();
-      renderTabs();
-      renderGrid();
+    function extractYouTubeVideoId(input) {
+      const trimmed = (input || '').trim();
+      if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+      const m = trimmed.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/);
+      return m ? m[1] : '';
     }
 
-    function updateFavBtnUI() {
-      const btn = document.getElementById('modalFavBtn');
-      const isFav = currentVideo && favorites.includes(currentVideo.id);
-      btn.textContent = isFav ? '⭐ 찜 완료' : '☆ 찜하기';
-      btn.className = isFav ? 'text-sm font-bold text-lime-400' : 'text-sm font-bold text-emerald-200';
-    }
+    async function handleAddSubmit() {
+      const targetId = document.getElementById('addTargetPlaylist').value;
+      const newPlName = document.getElementById('newPlaylistTitleInput').value.trim();
+      const rawUrl = document.getElementById('addUrlInput').value.trim();
+      let title = document.getElementById('addTitleInput').value.trim();
 
-    function openAddVideoModal() {
-      document.getElementById('addVideoModal').classList.remove('hidden');
-    }
-    function closeAddVideoModal() {
-      document.getElementById('addVideoModal').classList.add('hidden');
-    }
-    function extractYoutubeId(input) {
-      input = (input || '').trim();
-      if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
-      const m = input.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/);
-      return m ? m[1] : null;
-    }
-    async function saveNewVideo() {
-      const cat = document.getElementById('newVideoCategory').value;
-      let title = document.getElementById('newVideoTitle').value.trim();
-      const vid = extractYoutubeId(document.getElementById('newVideoUrl').value);
+      const vid = extractYouTubeVideoId(rawUrl);
       if (!vid) {
-        alert('올바른 유튜브 주소나 11자리 영상 ID를 입력해 주세요.');
+        showToast('올바른 유튜브 영상 URL 또는 11자리 ID를 입력해 주세요!');
         return;
       }
+
       if (!title) {
         try {
           const r = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${vid}`);
@@ -558,33 +1239,109 @@
           title = '에그박사 새로운 탐사 영상';
         }
       }
-      const badgeMap = {
-        insect: '🪲 곤충·절지류',
-        reptile: '🦎 파충류·양서류',
-        aquatic: '🦀 수생·바다',
-        explore: '🌿 자연탐사',
-        lab: '🔬 관찰·실험'
-      };
-      videoList.unshift({
-        id: vid,
-        title: title,
-        category: cat,
-        badge: badgeMap[cat] || '🪲 에그박사',
-        date: new Date().toISOString().slice(0, 10)
-      });
-      localStorage.setItem(STORAGE_VIDEOS_KEY, JSON.stringify(videoList));
-      document.getElementById('newVideoTitle').value = '';
-      document.getElementById('newVideoUrl').value = '';
-      closeAddVideoModal();
-      renderTabs();
-      renderGrid();
+
+      if (targetId === 'NEW_PLAYLIST') {
+        const newId = 'custom_' + Date.now();
+        playlists.unshift({
+          id: newId,
+          title: newPlName || '새 에그박사 재생목록',
+          icon: '📂',
+          updatedLabel: '나만의 재생목록',
+          description: '직접 만든 에그박사 재생목록 폴더',
+          videos: [{ id: vid, title: title, ep: 1 }]
+        });
+        activePlaylistId = newId;
+      } else {
+        const pl = playlists.find(p => p.id === targetId);
+        if (pl) {
+          pl.videos.unshift({ id: vid, title: title, ep: pl.videos.length + 1 });
+          activePlaylistId = pl.id;
+        }
+      }
+
+      savePlaylistsToStorage();
+      document.getElementById('addUrlInput').value = '';
+      document.getElementById('addTitleInput').value = '';
+      closeAddModal();
+      viewMode = 'playlist_detail';
+      renderAll();
+      showToast('재생목록에 새 영상이 추가되었습니다!');
     }
 
-    // 초기 실행
-    renderTabs();
-    renderGrid();
-    updateLastWatchedBanner();
-    syncEggbugsLatestRSS();
+    function handleSearch(val) {
+      searchQuery = val;
+      const clearBtn = document.getElementById('clearSearchBtn');
+      if (val.trim().length > 0) clearBtn.classList.remove('hidden');
+      else clearBtn.classList.add('hidden');
+      renderAll();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      handleSearch('');
+    }
+
+    function toggleFavorite(videoId) {
+      const idx = favorites.indexOf(videoId);
+      if (idx > -1) {
+        favorites.splice(idx, 1);
+        showToast('찜한 영상에서 제외했어요.');
+      } else {
+        favorites.unshift(videoId);
+        showToast('⭐ 찜한 영상에 추가했어요!');
+      }
+      localStorage.setItem(STORAGE_FAV_KEY, JSON.stringify(favorites));
+      renderAll();
+      if (activeModalVideoId === videoId) updateModalFavButton();
+    }
+
+    function toggleFavoriteFromModal() {
+      if (activeModalVideoId) toggleFavorite(activeModalVideoId);
+    }
+
+    function updateModalFavButton() {
+      const isFav = favorites.includes(activeModalVideoId);
+      const icon = document.getElementById('modalFavIcon');
+      const text = document.getElementById('modalFavText');
+      if (isFav) {
+        icon.className = 'fa-solid fa-star text-lime-300';
+        text.textContent = '찜 완료';
+      } else {
+        icon.className = 'fa-regular fa-star';
+        text.textContent = '찜하기';
+      }
+    }
+
+    function clearAllWatchProgress() {
+      watchProgress = {};
+      localStorage.setItem(STORAGE_PROGRESS_KEY, JSON.stringify(watchProgress));
+      renderAll();
+      showToast('이어보기 기록을 모두 비웠어요.');
+    }
+
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      const text = document.getElementById('toastMessage');
+      text.textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => box.classList.add('hidden'), 2300);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    window.addEventListener('beforeunload', saveCurrentPlaybackPosition);
+
+    window.onload = function () {
+      renderAll();
+    };
   </script>
 </body>
 </html>
